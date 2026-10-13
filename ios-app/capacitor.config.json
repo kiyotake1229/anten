@@ -1,0 +1,19 @@
+{
+  "appId": "work.ltv.anten",
+  "appName": "暗転",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F3EFE6",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#15161A"
+    },
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DEFAULT"
+    }
+  }
+}

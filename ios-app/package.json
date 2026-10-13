@@ -1,0 +1,24 @@
+{
+  "name": "anten-ios",
+  "version": "1.1.0",
+  "private": true,
+  "description": "暗転 触ると動けるが目を閉じてしまう落下回避ゲーム iOSアプリ (Capacitorラッパー)",
+  "scripts": {
+    "sync-web": "bash sync-web.sh",
+    "sync": "npm run sync-web && npx cap sync ios",
+    "open": "npx cap open ios",
+    "icons": "npx @capacitor/assets generate --ios --iconBackgroundColor '#07080C' --iconBackgroundColorDark '#07080C' --splashBackgroundColor '#F3EFE6' --splashBackgroundColorDark '#07080C'"
+  },
+  "dependencies": {
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/haptics": "^7.0.5",
+    "@capacitor/ios": "^7.6.9",
+    "@capacitor/local-notifications": "^7.0.7",
+    "@capacitor/status-bar": "^7.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.9"
+  }
+}

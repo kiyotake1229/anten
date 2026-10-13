@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256">
+  <!-- 暗転のアイコン: 黒い角丸の中に、上まぶたで半分隠れた紙色の目。瞳はシアン -->
+  <rect width="256" height="256" rx="58" fill="#07080C"/>
+  <g id="art">
+    <path d="M38 128 Q128 40 218 128 Q128 216 38 128 Z" fill="#F3EFE6"/>
+    <circle cx="128" cy="150" r="11" fill="#5BE8FF"/>
+    <path d="M16 128 Q128 22 240 128 L240 128 Q128 160 16 128 Z" fill="#07080C"/>
+    <path d="M38 128 Q128 160 218 128" fill="none" stroke="#2A2D36" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

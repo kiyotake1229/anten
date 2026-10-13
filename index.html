@@ -1,0 +1,1324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>暗転</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="description" content="触ると動ける。でも見えない。見るか動くかを親指ひとつで選び続ける、新感覚の落下回避ゲーム。">
+<meta name="theme-color" content="#F3EFE6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="暗転">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  /* Layout: one full-bleed canvas. The world is bright paper when the eye is open and pure dark when it is closed; DOM overlays float on top as thin paper sheets. */
+  --paper:#F3EFE6; --paper2:#E6E0D4; --grid:#E4DFD3;
+  --ink:#15161A; --ink2:#3A3C44; --ink3:#8A8C94;
+  --dark:#07080C; --darkedge:#2A2D36;
+  --cyan:#5BE8FF; --amber:#FFB36B; --red:#FF4D4D; --gold:#FFD36B;
+  --body:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--paper);color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%;touch-action:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:2px solid var(--ink3);outline-offset:3px;border-radius:12px}
+svg{display:block}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:2}
+#ui>*{pointer-events:none}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;left:0;right:0;top:0;max-width:600px;margin:0 auto;padding:calc(var(--st) + 10px) 14px 0;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;z-index:3;transition:opacity .4s var(--ease)}
+#hud .mid{grid-column:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0}
+#score{font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);transition:color .06s;transform-origin:50% 60%}
+#score.pop{animation:pop .15s var(--ease)}
+#score.gold{color:var(--gold)}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
+#best{font-size:13px;font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;margin-top:4px;transition:color .06s}
+#best.gold{color:var(--gold)}
+#mode{grid-column:1;justify-self:start;font-size:12px;font-weight:600;color:var(--ink3);padding:6px 10px;border-radius:999px;border:1px solid var(--paper2);background:rgba(243,239,230,.7);transition:color .06s,border-color .06s,background .06s;margin-top:8px}
+#mode:empty{display:none}
+#pauseBtn{grid-column:3;justify-self:end;width:44px;height:44px;display:grid;place-items:center;color:var(--ink2);pointer-events:auto;border-radius:12px;transition:color .06s,transform .2s var(--ease)}
+#pauseBtn svg{width:24px;height:24px}
+#pauseBtn:active{transform:scale(.9)}
+body.dark #score{color:var(--paper)}
+body.dark #best{color:var(--ink3)}
+body.dark #mode{color:var(--ink3);border-color:var(--darkedge);background:rgba(7,8,12,.7)}
+body.dark #pauseBtn{color:var(--ink3)}
+body.dark #score.gold,body.dark #best.gold{color:var(--gold)}
+#hud.off{opacity:0}
+
+/* ---------- generic ---------- */
+.icon-btn{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--ink2);pointer-events:auto;transition:background .25s,transform .2s var(--ease),color .25s;position:relative}
+.icon-btn svg{width:24px;height:24px}
+.icon-btn:active{transform:scale(.9)}
+@media (hover:hover){.icon-btn:hover{background:rgba(21,22,26,.06)}}
+.icon-btn .lbl{position:absolute;left:50%;top:100%;transform:translateX(-50%);font-size:10px;color:var(--ink3);white-space:nowrap;letter-spacing:.06em}
+.row{display:flex;align-items:center;justify-content:center;gap:28px}
+
+/* ---------- title ---------- */
+#title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(var(--st) + 18vh) 24px calc(var(--sb) + 22px);pointer-events:auto;transition:opacity .35s var(--ease),visibility 0s .35s;z-index:4}
+#title.gone{opacity:0;visibility:hidden;pointer-events:none}
+#title .top{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:26px 44px;border-radius:50%;background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(243,239,230,.97) 40%,rgba(243,239,230,0) 100%)}
+#title h1{margin:0;font-size:64px;font-weight:800;letter-spacing:.18em;text-indent:.18em;line-height:1;color:var(--ink);animation:rise .9s var(--ease) both}
+#title .tag{margin:0;font-size:15px;font-weight:600;color:var(--ink2);letter-spacing:.06em;animation:rise .9s .15s var(--ease) both}
+#title .tag2{margin:0;font-size:12px;color:var(--ink3);letter-spacing:.06em;animation:rise .9s .3s var(--ease) both}
+#title .eye{width:44px;height:28px;color:var(--ink);animation:blink 5s 1.2s ease-in-out infinite}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#title .bottom{display:flex;flex-direction:column;align-items:center;gap:22px;animation:rise .9s .45s var(--ease) both}
+#title .stats{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+#title .hintline{font-size:12px;color:var(--ink3);letter-spacing:.08em;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+
+/* ---------- result ---------- */
+#result{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;padding:14px 22px calc(var(--sb) + 14px);background:rgba(243,239,230,.94);border-top:1px solid var(--paper2);border-radius:24px 24px 0 0;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transform:translateY(105%);visibility:hidden;transition:transform .22s var(--ease),visibility 0s .22s;pointer-events:auto;z-index:5;display:flex;flex-direction:column;align-items:center;gap:9px}
+#result.open{transform:none;visibility:visible;transition:transform .22s var(--ease)}
+#result .big{display:flex;align-items:baseline;gap:10px}
+#rScore{font-size:56px;font-weight:800;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
+#rScore.gold{color:var(--gold)}
+#rBadge{font-size:12px;font-weight:700;color:var(--paper);background:var(--ink);padding:4px 9px;border-radius:999px;letter-spacing:.06em}
+#rBadge.gold{background:var(--gold);color:var(--ink)}
+#rRank{font-size:13px;color:var(--ink2);letter-spacing:.1em}
+#rRank b{font-weight:800;color:var(--ink);font-size:15px;margin-left:6px}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:300px;border-top:1px solid var(--paper2);border-bottom:1px solid var(--paper2);padding:6px 0}
+.stats3 div{text-align:center}
+.stats3 b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1.1}
+.stats3 span{font-size:11px;color:var(--ink3);letter-spacing:.06em}
+.prog{width:100%;max-width:300px;display:flex;flex-direction:column;gap:5px}
+.prog .t{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.prog .bar{height:5px;border-radius:3px;background:var(--paper2);overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--ink);transition:width .8s var(--ease)}
+#rTap{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:.12em;padding:6px 0;animation:pulse 2.2s ease-in-out infinite}
+#rDaily{font-size:12px;color:var(--ink2);text-align:center;line-height:1.7}
+#result .row{gap:18px}
+#result .row .icon-btn{width:44px;height:44px}
+.textbtn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;white-space:nowrap;border-radius:14px;border:1px solid var(--paper2);font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.06em;pointer-events:auto;transition:background .25s,transform .2s var(--ease)}
+.textbtn svg{width:20px;height:20px}
+.textbtn:active{transform:scale(.95)}
+@media (hover:hover){.textbtn:hover{background:rgba(21,22,26,.06)}}
+
+/* ---------- pause ---------- */
+#pause{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(243,239,230,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);pointer-events:auto;z-index:5;opacity:0;visibility:hidden;transition:opacity .25s var(--ease),visibility 0s .25s}
+#pause.open{opacity:1;visibility:visible;transition:opacity .25s var(--ease)}
+#pause b{font-size:26px;font-weight:800;letter-spacing:.2em;text-indent:.2em}
+#pause span{font-size:13px;color:var(--ink2);letter-spacing:.1em}
+
+/* ---------- sheet (settings) ---------- */
+#scrim{position:fixed;inset:0;background:rgba(21,22,26,.3);opacity:0;pointer-events:none;transition:opacity .3s var(--ease);z-index:6}
+#scrim.open{opacity:1;pointer-events:auto}
+#settings{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;max-height:min(86vh,86dvh);display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--paper2);border-bottom:0;border-radius:24px 24px 0 0;transform:translateY(105%);visibility:hidden;transition:transform .4s var(--ease),visibility 0s .4s;z-index:7;pointer-events:auto}
+#settings.open{transform:none;visibility:visible;transition:transform .4s var(--ease)}
+.grip{width:36px;height:4px;border-radius:4px;background:var(--paper2);margin:10px auto 0}
+.shead{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 4px 22px}
+.shead h2{margin:0;font-size:18px;font-weight:800;letter-spacing:.14em}
+.sbody{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 22px calc(var(--sb) + 22px);overscroll-behavior:contain;display:flex;flex-direction:column;gap:4px;touch-action:pan-y}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:56px;border-bottom:1px solid var(--paper2)}
+.srow:last-child{border-bottom:0}
+.srow .l{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;color:var(--ink)}
+.srow .l svg{width:22px;height:22px;color:var(--ink2)}
+.srow .d{font-size:11px;color:var(--ink3);font-weight:400;margin-top:2px}
+.sw{width:50px;height:30px;border-radius:15px;background:var(--paper2);position:relative;transition:background .25s;flex:none;pointer-events:auto}
+.sw::before{content:"";position:absolute;inset:-12px -12px}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .25s var(--ease)}
+.sw.on{background:var(--ink)}
+.sw.on::after{transform:translateX(20px)}
+.seg{display:flex;border:1px solid var(--paper2);border-radius:12px;overflow:hidden;flex:none}
+.seg button{padding:0 14px;height:44px;font-size:13px;font-weight:600;color:var(--ink3);pointer-events:auto;transition:background .2s,color .2s}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.howto{font-size:13px;color:var(--ink2);line-height:1.9;padding:12px 0 8px}
+.howto b{color:var(--ink)}
+.danger{color:var(--red)!important}
+.ver{font-size:11px;color:var(--ink3);text-align:right;padding-top:10px}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;left:0;right:0;top:calc(var(--st) + 84px);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:8;padding:0 16px}
+.toast{padding:10px 18px;border-radius:16px;background:var(--ink);color:var(--paper);font-size:13px;font-weight:700;letter-spacing:.06em;box-shadow:0 8px 30px rgba(0,0,0,.25);animation:tin .5s var(--ease)}
+.toast.out{animation:tout .5s var(--ease) forwards}
+body.dark .toast{background:var(--paper);color:var(--ink)}
+@keyframes tin{from{opacity:0;transform:translateY(-8px) scale(.96)}}
+@keyframes tout{to{opacity:0;transform:translateY(-6px) scale(.97)}}
+
+#shareBox{position:fixed;left:16px;right:16px;bottom:calc(var(--sb) + 120px);z-index:9;pointer-events:auto}
+#shareBox textarea{width:100%;height:60px;border-radius:12px;border:1px solid var(--paper2);padding:10px;font:inherit;font-size:13px;color:var(--ink);background:#fff;resize:none;-webkit-user-select:text;user-select:text}
+
+@media (prefers-reduced-motion:reduce){
+  #title h1,#title .tag,#title .tag2,#title .bottom{animation:none}
+  #title .eye,#title .hintline,#rTap{animation:none}
+}
+@media (max-height:600px){#title{padding-top:calc(var(--st) + 10vh)}#title h1{font-size:52px}}
+</style>
+</head>
+<body class="intro">
+<canvas id="c"></canvas>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9.5h18M8 2.5v3M16 2.5v3"/><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+    <symbol id="i-spkoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></symbol>
+    <symbol id="i-vib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8M1.5 10v4M22.5 10v4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v6a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-6"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l.8 12.2a2 2 0 0 0 2 1.8h5.4a2 2 0 0 0 2-1.8L17.5 7M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 44 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14c5-8 12-12 20-12s15 4 20 12c-5 8-12 12-20 12S7 22 2 14z"/><circle cx="22" cy="14" r="5"/><circle cx="22" cy="14" r="1.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11V4.5a1.5 1.5 0 0 1 3 0V12M14 11.5V6.5a1.5 1.5 0 0 1 3 0V13M17 12.5V9a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6h-2.2a6 6 0 0 1-5-2.7L4 13.5a1.6 1.6 0 0 1 2.6-1.9L8 13"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  </defs>
+</svg>
+
+<div id="ui">
+  <div id="hud" class="off">
+    <div id="mode"></div>
+    <div class="mid"><div id="score">0</div><div id="best">ベスト 0</div></div>
+    <button id="pauseBtn" aria-label="一時停止"><svg><use href="#i-pause"/></svg></button>
+  </div>
+
+  <div id="title">
+    <div class="top">
+      <svg class="eye"><use href="#i-eye"/></svg>
+      <h1>暗転</h1>
+      <p class="tag">触ると動ける。でも見えない</p>
+      <p class="tag2" id="tag2">画面のどこを触ってもいい</p>
+    </div>
+    <div class="bottom">
+      <div class="hintline">どこでも触れて開始</div>
+      <div class="row">
+        <button class="icon-btn" id="tSettings" aria-label="設定"><svg><use href="#i-gear"/></svg><span class="lbl">設定</span></button>
+        <button class="icon-btn" id="tDaily" aria-label="今日の暗転"><svg><use href="#i-cal"/></svg><span class="lbl">今日の暗転</span></button>
+        <button class="icon-btn" id="tSound" aria-label="音"><svg id="tSoundIcon"><use href="#i-spk"/></svg><span class="lbl">音</span></button>
+      </div>
+      <div class="stats" id="tStats">ベスト 0 ｜ 累計 0列</div>
+    </div>
+  </div>
+
+  <div id="result">
+    <div class="big"><div id="rScore">0</div><div id="rBadge" hidden>ベスト更新</div></div>
+    <div id="rRank">段位<b id="rRankName">見習い</b></div>
+    <div class="stats3"><div><b id="rRows">0</b><span>列</span></div><div><b id="rDark">0</b><span>暗列</span></div><div><b id="rStreak">0</b><span>最長連続暗</span></div></div>
+    <div class="prog"><div class="t"><span id="rProgL">蒼まで</span><span id="rProgR">0 / 100 列</span></div><div class="bar"><i id="rProgBar"></i></div></div>
+    <div id="rDaily" hidden></div>
+    <div id="rTap">タップでもう一回</div>
+    <div class="row">
+      <button class="icon-btn" id="rSettings" aria-label="設定"><svg><use href="#i-gear"/></svg></button>
+      <button class="icon-btn" id="rDailyBtn" aria-label="今日の暗転"><svg><use href="#i-cal"/></svg></button>
+      <button class="textbtn" id="rShare" hidden><svg><use href="#i-share"/></svg>共有</button>
+      <button class="textbtn" id="rEndless" hidden>エンドレスへ</button>
+    </div>
+  </div>
+
+  <div id="pause"><b>一時停止</b><span>タップで再開</span></div>
+
+  <div id="scrim"></div>
+  <div id="settings" role="dialog" aria-label="設定">
+    <div class="grip"></div>
+    <div class="shead"><h2>設定</h2><button class="icon-btn" id="sClose" aria-label="閉じる"><svg><use href="#i-x"/></svg></button></div>
+    <div class="sbody">
+      <div class="srow"><div class="l"><svg><use href="#i-spk"/></svg><div>音<div class="d">まぶた・通過・暗闇のハム音</div></div></div><button class="sw" id="swSound" role="switch" aria-label="音"></button></div>
+      <div class="srow"><div class="l"><svg><use href="#i-vib"/></svg><div>振動<div class="d">対応端末のみ</div></div></div><button class="sw" id="swVibe" role="switch" aria-label="振動"></button></div>
+      <div class="srow" id="rowNotify" hidden><div class="l"><svg><use href="#i-cal"/></svg><div>朝のお知らせ<div class="d">毎朝8時に「今日の暗転」を知らせる（アプリ版のみ）</div></div></div><button class="sw" id="swNotify" role="switch" aria-label="朝のお知らせ"></button></div>
+      <div class="srow"><div class="l"><svg><use href="#i-hand"/></svg><div>感度<div class="d">指の動きに対する熾火の動き</div></div></div><div class="seg" id="segGain"><button data-g="1.2">低</button><button data-g="1.6">標準</button><button data-g="2">高</button></div></div>
+      <div class="howto">白く光る点が「熾火（おきび）」＝自分。<b>触れている間</b>だけ熾火が動く。でもその間はまぶたが閉じて見えない。<br><b>離す</b>と見える。でも動けない。<br><b>閉じたまま</b>列を抜けると得点が増えていく。<br>「‹‹」の付いた<b>忍び列</b>は閉じている間だけ動く。「鏡」の列は閉じている間だけ左右が逆。隙間が2つの<b>選択列</b>は片方が遠回り。</div>
+      <div class="srow"><div class="l danger"><svg><use href="#i-trash"/></svg><div>データを消す<div class="d">ベスト・累計・設定がすべて消える</div></div></div><button class="textbtn danger" id="sReset">消す</button></div>
+      <div class="ver">暗転 v1.1</div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+  <div id="shareBox" hidden><textarea id="shareText" readonly></textarea></div>
+</div>
+
+<script>
+'use strict';
+(() => {
+// ================= 道具 =================
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const easeInQuad = t => t * t;
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+const pad2 = n => String(n).padStart(2, '0');
+const localDateStr = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const quiet = p => { try { p && p.catch && p.catch(() => {}); } catch (e) {} };
+
+// ================= 定数 =================
+const W = 360, RH = 22, PR = 10, PMAX = 900, DT = 1 / 120;
+const COL = { paper: '#F3EFE6', paper2: '#E6E0D4', grid: '#E4DFD3', ink: '#15161A', ink2: '#3A3C44', ink3: '#8A8C94', dark: '#07080C', darkEdge: '#2A2D36', cyan: '#5BE8FF', amber: '#FFB36B', red: '#FF4D4D', gold: '#FFD36B' };
+const RANKS = [[0, '見習い'], [20, '手探り'], [50, '夜目'], [100, '暗中'], [200, '心眼'], [400, '無明']];
+const EMBERS = [{ at: 0, name: '白', col: '#FFFFFF' }, { at: 100, name: '蒼', col: '#7CC4FF' }, { at: 400, name: '金', col: '#FFD36B' }, { at: 1200, name: '紅', col: '#FF6B6B' }, { at: 3000, name: '虹', col: null }];
+const OPEN_NOTES = [440, 494, 554, 659, 784];
+const ST = { TITLE: 0, READY: 1, PLAY: 2, DEAD: 3, RESULT: 4, PAUSED: 5 };
+const VERSION = '1.1';
+
+// ================= 保存 =================
+const KEY = 'anten.v1';
+const DEF = () => ({
+  v: 1, best: 0, bestRows: 0, bestDate: '', maxDarkStreak: 0,
+  totalRows: 0, totalDarkRows: 0, totalPlays: 0, tier: 0,
+  daily: { date: '', tries: 0, best: 0, bestRows: 0, bestDark: 0, ghost: null, ghostScore: 0 },
+  dailyHistory: [],
+  settings: { sound: true, vibe: true, gain: 1.6, notify: false },
+  hints: { firstTouch: 0, dark: 0, squint: 0, shinobi: 0, cancel: 0, double: 0, mirror: 0 },
+});
+let S = load();
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return DEF();
+    const o = JSON.parse(raw);
+    if (!o || o.v !== 1) return DEF();
+    const d = DEF();
+    for (const k in d) {
+      if (o[k] === undefined || o[k] === null) continue;
+      if (typeof d[k] === 'object' && d[k] && !Array.isArray(d[k])) { if (typeof o[k] === 'object') Object.assign(d[k], o[k]); }
+      else d[k] = o[k];
+    }
+    if (![1.2, 1.6, 2].includes(d.settings.gain)) d.settings.gain = 1.6;
+    if (!Array.isArray(d.dailyHistory)) d.dailyHistory = [];
+    for (const k of ['best', 'bestRows', 'maxDarkStreak', 'totalRows', 'totalDarkRows', 'totalPlays']) d[k] = Math.max(0, Math.floor(Number(d[k]) || 0));
+    d.tier = tierOf(d.totalRows);
+    d.settings.sound = !!d.settings.sound; d.settings.vibe = !!d.settings.vibe; d.settings.notify = !!d.settings.notify;
+    if (!d.daily || typeof d.daily !== 'object') d.daily = DEF().daily;
+    for (const k of ['tries', 'best', 'bestRows', 'bestDark', 'ghostScore']) d.daily[k] = Math.max(0, Math.floor(Number(d.daily[k]) || 0));
+    if (!Array.isArray(d.daily.ghost) || d.daily.ghost.length > 8000 || d.daily.ghost.some(v => typeof v !== 'number')) d.daily.ghost = null;
+    return d;
+  } catch (e) { return DEF(); }
+}
+function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 保存できない環境でも遊べる */ } }
+function rankOf(best) { let r = RANKS[0][1]; for (const [at, name] of RANKS) if (best >= at) r = name; return r; }
+function tierOf(total) { let t = 0; for (let i = 0; i < EMBERS.length; i++) if (total >= EMBERS[i].at) t = i; return t; }
+
+// ================= 画面の大きさ =================
+const cv = $('c'), ctx = cv.getContext('2d', { alpha: false });
+const themeMeta = document.querySelector('meta[name="theme-color"]');
+const FONT = '-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif';
+const F11 = '600 11px ' + FONT, F11B = '700 11px ' + FONT, F12 = '600 12px ' + FONT, F13 = '600 13px ' + FONT, F14 = '700 14px ' + FONT, F16 = '800 16px ' + FONT;
+let cssW = 0, cssH = 0, DPR = 1, LH = 640, PY = 397, FY = 97, SC = 1, OX = 0, OY = 0;
+let vignette = null, emberGrad = null, emberGradCol = '', fogGrad = null, fogBands = null;
+const SPAWN_ABOVE = 70;             // 列は霧の線より 70px 上（霧の中）に現れ、降りながら見えてくる
+const spawnY = () => FY - SPAWN_ABOVE;
+function layout() {
+  const r = cv.getBoundingClientRect();
+  cssW = Math.max(1, Math.round(r.width)); cssH = Math.max(1, Math.round(r.height));
+  DPR = Math.min(window.devicePixelRatio || 1, 3, Math.sqrt(4.5e6 / (cssW * cssH)));
+  cv.width = Math.round(cssW * DPR); cv.height = Math.round(cssH * DPR);
+  const oldPY = PY, oldLH = LH;
+  LH = clamp(Math.round(W * cssH / cssW), 560, 820);
+  PY = Math.round(LH * 0.62); FY = PY - 300;
+  SC = Math.min(cssW / W, cssH / LH); OX = (cssW - W * SC) / 2; OY = (cssH - LH * SC) / 2;
+  if (oldPY !== PY) { const d = PY - oldPY; for (const r of rows) r.y += d; for (const r of after.rows) r.y += d; }
+  if (oldLH !== LH || oldPY !== PY) {
+    // まぶたの位置も移し替える（開いた目は 0 と LH、それ以外は PY からの相対）
+    const mapY = y => y >= oldLH - .5 ? LH : y <= .5 ? 0 : y + (PY - oldPY);
+    for (const k of ['top', 'bot', 'fromT', 'fromB', 'toT', 'toB']) eye[k] = mapY(eye[k]);
+  }
+  vignette = ctx.createRadialGradient(W / 2, LH / 2, 0, W / 2, LH / 2, LH * 0.7);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.2)');
+  fogGrad = ctx.createLinearGradient(0, FY - 60, 0, FY + 24);
+  fogGrad.addColorStop(0, COL.paper); fogGrad.addColorStop(1, 'rgba(243,239,230,0)');
+  fogBands = {};
+  for (const h of [44, 30]) for (const a of [.2, .35]) {
+    const g = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    g.addColorStop(0, 'rgba(243,239,230,0)'); g.addColorStop(.5, `rgba(243,239,230,${a})`); g.addColorStop(1, 'rgba(243,239,230,0)');
+    fogBands[h + ':' + a] = g;
+  }
+}
+const toLogical = (cx, cy) => [(cx - OX) / SC, (cy - OY) / SC];
+
+// ================= 音 =================
+const A = { ctx: null, master: null, ready: false, noise: null, humG: null, shinG: null, shinPan: null, voices: 0 };
+function audioInit() {
+  if (A.ctx) { if (A.ctx.state !== 'running') quiet(A.ctx.resume()); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  let c; try { c = new AC(); } catch (e) { return; }
+  A.ctx = c;
+  if (c.state !== 'running') quiet(c.resume());
+  A.master = c.createGain(); A.master.gain.value = S.settings.sound ? 1 : 0;
+  const comp = c.createDynamicsCompressor();
+  comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = .005; comp.release.value = .25;
+  A.master.connect(comp); comp.connect(c.destination);
+  A.noise = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+  { const d = A.noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  // 閉眼中のハム（55Hz + 110Hz）
+  A.humG = c.createGain(); A.humG.gain.value = 0; A.humG.connect(A.master);
+  for (const f of [55, 110]) { const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; const g = c.createGain(); g.gain.value = f === 55 ? .06 : .035; o.connect(g); g.connect(A.humG); o.start(); }
+  // 忍び列の擦れる音
+  A.shinG = c.createGain(); A.shinG.gain.value = 0;
+  { const src = c.createBufferSource(); src.buffer = A.noise; src.loop = true; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 200;
+    src.connect(lp);
+    if (c.createStereoPanner) { A.shinPan = c.createStereoPanner(); lp.connect(A.shinPan); A.shinPan.connect(A.shinG); } else lp.connect(A.shinG);
+    A.shinG.connect(A.master); src.start(); }
+  A.ready = true;
+}
+function setMaster() { if (A.ready) A.master.gain.setTargetAtTime(S.settings.sound ? 1 : 0, A.ctx.currentTime, .02); }
+function out(g, pan) {
+  if (pan && A.ctx.createStereoPanner) { const p = A.ctx.createStereoPanner(); p.pan.value = clamp(pan, -1, 1); g.connect(p); p.connect(A.master); }
+  else g.connect(A.master);
+}
+function voice(node, t1) { if (A.voices >= 8) return false; A.voices++; node.onended = () => { A.voices--; }; return true; }
+// 単音。f0→f1 に dur 秒で動く
+function tone(type, f0, f1, dur, vol, o = {}) {
+  if (!A.ready || !S.settings.sound || A.ctx.state !== 'running') return;
+  const c = A.ctx, t = c.currentTime + (o.when || 0);
+  const os = c.createOscillator(); os.type = type;
+  os.frequency.setValueAtTime(f0, t); if (f1 !== f0) os.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  const g = c.createGain();
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + (o.atk || .004)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  if (!voice(os)) return;
+  os.connect(g); out(g, o.pan); os.start(t); os.stop(t + dur + .03);
+}
+// ノイズ。filter の種類と周波数（f0→f1）
+function noise(dur, vol, o = {}) {
+  if (!A.ready || !S.settings.sound || A.ctx.state !== 'running') return;
+  const c = A.ctx, t = c.currentTime + (o.when || 0);
+  const src = c.createBufferSource(); src.buffer = A.noise; src.loop = true; src.loopStart = Math.random() * 1.5;
+  const f = c.createBiquadFilter(); f.type = o.type || 'lowpass'; f.frequency.setValueAtTime(o.f0 || 1000, t);
+  if (o.f1) f.frequency.exponentialRampToValueAtTime(o.f1, t + dur);
+  f.Q.value = o.q || 1;
+  const g = c.createGain();
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + (o.atk || .004)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  if (!voice(src)) return;
+  src.connect(f); f.connect(g); out(g, o.pan); src.start(t); src.stop(t + dur + .03);
+}
+const sfx = {
+  close() { tone('sine', 90, 60, .08, .4); noise(.06, .2, { f0: 600 }); },
+  humOn(on) { if (!A.ready) return; A.humG.gain.setTargetAtTime(on ? 1 : 0, A.ctx.currentTime, on ? .1 : .07); },
+  open(tier) { noise(.1, .15, { type: 'highpass', f0: 2000 }); const f = OPEN_NOTES[clamp(tier, 0, 4)]; tone('sine', f, f * 1.5, .09, .12); },
+  pass() { tone('square', 1200, 1200, .02, .15); },
+  dark(gapW, gapX, streak) {
+    noise(.14, .35, { type: 'bandpass', f0: 400 + (120 - gapW) * 10, q: 2, atk: .01, pan: (gapX - 180) / 180 * .8 });
+    tone('sine', [70, 80, 90, 100][clamp(streak - 1, 0, 3)], 60, .12, .3);
+  },
+  shinobi(on, gapX) { if (!A.ready) return; A.shinG.gain.setTargetAtTime(on && S.settings.sound && state === ST.PLAY ? .05 : 0, A.ctx.currentTime, .05); if (A.shinPan && on) A.shinPan.pan.value = clamp((gapX - 180) / 180, -1, 1); },
+  near() { tone('sine', 2200, 2200, .04, .2); },
+  die() { noise(.25, .5, { f0: 8000, f1: 200 }); tone('sine', 2400, 2400, .03, .15); tone('sine', 3100, 3100, .03, .12, { when: .04 }); tone('sine', 1900, 1900, .03, .12, { when: .09 }); },
+  result(best) { if (best) { tone('sine', 660, 660, .12, .12); tone('sine', 990, 990, .12, .12, { when: .12 }); } else tone('sine', 660, 660, .12, .1); },
+  unlock() { [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, .08, .12, { when: i * .08 })); },
+  btn() { tone('triangle', 880, 880, .03, .08); },
+};
+
+// ================= 触覚 =================
+// ここだけ後で Capacitor Haptics に差し替える
+function haptic(p) {
+  if (!S.settings.vibe || SIM) return;
+  try {
+    const H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+    if (NATIVE && H) { if (Array.isArray(p)) quiet(H.notification({ type: 'SUCCESS' })); else quiet(H.impact({ style: p >= 60 ? 'HEAVY' : p >= 12 ? 'MEDIUM' : 'LIGHT' })); return; }
+    if (navigator.vibrate) navigator.vibrate(p);
+  } catch (e) { /* 振動できない端末 */ }
+}
+
+// ================= ネイティブ連携（iOS アプリのときだけ動く） =================
+const CAP = (window.Capacitor && window.Capacitor.Plugins) || {};
+// 朝のお知らせ: 14日ぶんを予約し、開くたびに入れ直す（OFF なら全部消す）
+async function notifyApply(fromToggle) {
+  if (!NATIVE || !CAP.LocalNotifications) return;
+  const LN = CAP.LocalNotifications;
+  try {
+    await LN.cancel({ notifications: Array.from({ length: 14 }, (_, i) => ({ id: 100 + i })) });
+    if (!S.settings.notify) return;
+    let p = await LN.checkPermissions();
+    if (p.display !== 'granted' && fromToggle) p = await LN.requestPermissions();
+    if (p.display !== 'granted') { S.settings.notify = false; persist(); refreshSettings(); if (fromToggle) toast('通知が許可されていない。設定アプリで許可できる'); return; }
+    const now = new Date(), list = [];
+    for (let i = 0; i < 14; i++) {
+      const at = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 8, 0, 0);
+      if (at <= now) continue;
+      list.push({ id: 100 + i, title: '暗転', body: '今日の暗転が新しくなった。挑めるのは3回だけ', schedule: { at } });
+    }
+    if (list.length) await LN.schedule({ notifications: list });
+  } catch (e) { /* 通知が使えない環境 */ }
+}
+function statusBarDark(dark) { if (NATIVE && CAP.StatusBar) quiet(CAP.StatusBar.setStyle({ style: dark ? 'DARK' : 'LIGHT' })); }
+
+// ================= ゲームの状態 =================
+let SIM = false;              // 自動検証（画面・音なし）で動かしているとき true
+let state = ST.TITLE, mode = 'endless';
+const G = { score: 0, passed: 0, streak: 0, maxStreak: 0, darkRows: 0, v: 140, prevPassTime: -1, cancels: 0, round: 0, steps: 0, trace: [], ghostBeaten: false };
+const rows = [];              // 先頭が自機にいちばん近い（下）、末尾がいちばん新しい（上）
+let rowSeq = 0;
+const player = { x: 180, tx: 180, trail: [] };
+const eye = { mode: 'OPEN', top: 0, bot: 640, fromT: 0, fromB: 640, toT: 0, toB: 640, t0: 0, dur: 0, closedSince: -1, downAt: -1 };
+const after = { rows: [], t0: 0, dur: 1 };
+const gen = { k: 0, prevX: 180, prevW: 170, moveRun: 0, afterShinobi: 0, prevRange: null, mirrorLeft: 0, mirrorCool: 0, rng: Math.random, log: [] };
+let gameTime = 0, fxTime = 0, hitstopUntil = 0, slowUntil = 0, freezeUntil = 0, lastRelease = -1e9;
+const pointer = { id: null, prevX: 0, isMouse: false, lastX: 180, lastY: 500 };
+const key = { held: false, dir: 0 };
+let bot = false;
+const timers = [];
+function later(sec, fn) { timers.push({ at: fxTime + sec, fn }); }
+function runTimers() { for (let i = 0; i < timers.length; i++) if (timers[i].at <= fxTime) { const t = timers.splice(i--, 1)[0]; t.fn(); } }
+// 演出
+const particles = [], floaters = [], cracks = [], speedLines = [];
+let shake = { amp: 0, t0: -9, dur: .3 }, killer = null, deadPoint = null, deathAt = -9, cancelRing = null, unlockFx = null, glowPulse = -9, ringFlash = -9, fogPulse = -9, gridOff = 0;
+let showLidHint = false, shinOn = false, shinX = 0, pausedDrawn = false;
+let rowPool = [];
+
+// ================= 生成（難易度の式） =================
+const speedAt = k => Math.min(360, 140 + 5 * k);
+const spacingAt = k => 150;
+const gapAt = k => k < 5 ? 170 : clamp(120 - 0.8 * (k - 5), 72, 120);
+// 移り列で動かす最大距離: 前の列を抜けてから次の列に入るまでの時間（列の厚み22+自機20を引く）から反応の120msを引き、最高速の55%で届く距離
+const dmaxAt = k => clamp(0.55 * PMAX * ((spacingAt(k) - RH - 2 * PR) / speedAt(k) - 0.12), 60, 220);
+const pStay = k => k < 10 ? 0.5 : Math.max(0.25, 0.5 - (k - 10) * 0.25 / 30);
+const afterDur = k => clamp(1.0 - 0.008 * (k - 10), 0.6, 1.0);
+const TUT = [[180, 'STAY'], [200, 'STAY'], [90, 'MOVE'], [110, 'STAY'], [240, 'MOVE']];
+const gapLo = gw => gw / 2 + 20, gapHi = gw => W - gw / 2 - 20;
+
+// k 番目の列の仕様を決める（乱数は gen.rng だけ）
+function nextSpec(k) {
+  const rng = gen.rng, gw = gapAt(k), lo = gapLo(gw), hi = gapHi(gw), dmax = dmaxAt(k);
+  let x, kind, shinobi = false, drift = 0, range = null;
+  if (k < 5) {
+    [x, kind] = TUT[k];
+  } else if (gen.afterShinobi === 2) {
+    // 忍び列の直後: 忍びの取りうる範囲のどこからでも dmax 以内に届く位置（必ず移り列扱い）
+    kind = 'MOVE';
+    const [c0, c1] = gen.prevRange;
+    const a = Math.max(lo, Math.max(c0, c1) - dmax), b = Math.min(hi, Math.min(c0, c1) + dmax);
+    x = a <= b ? a + rng() * (b - a) : clamp((c0 + c1) / 2, lo, hi);
+  } else {
+    if (gen.afterShinobi === 1 || gen.moveRun >= 2) kind = 'STAY';
+    else kind = rng() < pStay(k) ? 'STAY' : 'MOVE';
+    if (kind === 'STAY') {
+      const off = clamp(gw / 2 - 24, 8, 24);
+      x = clamp(gen.prevX + (rng() * 2 - 1) * off, lo, hi);
+    } else {
+      const minD = gw / 2 + 4;
+      let dir = gen.prevX < 100 ? (rng() < .8 ? 1 : -1) : gen.prevX > 260 ? (rng() < .8 ? -1 : 1) : (rng() < .5 ? 1 : -1);
+      let room = dir > 0 ? hi - gen.prevX : gen.prevX - lo;
+      if (room < minD) { dir = -dir; room = dir > 0 ? hi - gen.prevX : gen.prevX - lo; }
+      if (room < minD) { kind = 'STAY'; x = clamp(gen.prevX, lo, hi); }
+      else { const top = Math.min(dmax, room); x = gen.prevX + dir * (minD + rng() * (top - minD)); }
+    }
+  }
+  x = clamp(x, lo, hi);
+  // 鏡の列（続き）: 閉眼中だけ左右が逆になる区間。3本で1組、終わったら12列は出さない
+  let mirror = false;
+  if (gen.mirrorLeft > 0) { mirror = true; gen.mirrorLeft--; if (gen.mirrorLeft === 0) gen.mirrorCool = 12; }
+  else if (gen.mirrorCool > 0) gen.mirrorCool--;
+  // 忍び列: 移り列で、移りの1本目で、12列目以降（鏡の区間には出さない）
+  if (!mirror && kind === 'MOVE' && k >= 12 && gen.moveRun === 0 && gen.afterShinobi === 0 && rng() < Math.min(.35, .15 + .005 * (k - 12))) {
+    const mag = 30 + Math.min(40, k - 12), tdesc = (PY - spawnY()) / speedAt(k);
+    const dirs = rng() < .5 ? [1, -1] : [-1, 1];
+    for (const d of dirs) {
+      const c1 = x + d * mag * tdesc;
+      if (c1 >= lo && c1 <= hi && Math.abs(c1 - gen.prevX) <= dmax) { shinobi = true; drift = d * mag; range = [x, c1]; break; }
+    }
+  }
+  // 鏡の列（始まり）: 40列目以降、忍びでも忍びの直後でもない列から 1/10 で始める
+  if (!mirror && !shinobi && gen.afterShinobi === 0 && gen.mirrorCool === 0 && k >= 40 && rng() < .1) { mirror = true; gen.mirrorLeft = 2; }
+  // 選択列: 隙間が2つ。本物（x）は上の規則どおりで、もう1つ（x2）は離れた所に置く。次の列は本物から決まるので、x2 側は遠回りになりやすい
+  let x2 = -1;
+  if (!mirror && !shinobi && gen.afterShinobi === 0 && k >= 30 && rng() < .25) {
+    const need = gw + 24, roomL = x - lo, roomR = hi - x;
+    const sides = [];
+    if (roomL >= need) sides.push(-1); if (roomR >= need) sides.push(1);
+    if (sides.length) { const d = sides[Math.floor(rng() * sides.length)], room = d > 0 ? roomR : roomL; x2 = x + d * (need + rng() * (room - need)); }
+  }
+  if (gen.afterShinobi === 2) gen.afterShinobi = 1; else if (gen.afterShinobi === 1) gen.afterShinobi = 0;
+  if (shinobi) gen.afterShinobi = 2;
+  gen.prevRange = range; gen.prevX = x; gen.prevW = gw;
+  gen.moveRun = kind === 'MOVE' ? gen.moveRun + 1 : 0;
+  return { x, gw, kind, shinobi, drift, chev: Math.abs(drift) >= 50 ? 2 : 1, mirror, x2 };
+}
+function addRow(y) {
+  const k = gen.k++, sp = nextSpec(k);
+  const r = rowPool.pop() || {};
+  r.id = ++rowSeq; r.y = y; r.gapX = sp.x; r.gapW = sp.gw; r.kind = sp.kind; r.shinobi = sp.shinobi; r.drift = sp.drift; r.chev = sp.chev;
+  r.mirror = sp.mirror; r.gap2X = sp.x2;
+  r.passed = false; r.k = k; r.minGap = 1e9; r.flashT0 = -9; r.label = '';
+  if (!SIM) {
+    if (r.shinobi && S.hints.shinobi < 3) { r.label = '忍び：見ていない間だけ動く'; S.hints.shinobi++; }
+    else if (r.mirror && S.hints.mirror < 3 && gen.mirrorLeft === 2) { r.label = '鏡：閉じている間は左右が逆'; S.hints.mirror++; }
+    else if (r.gap2X >= 0 && S.hints.double < 3) { r.label = '選択：片方は次につながらない'; S.hints.double++; }
+  }
+  rows.push(r);
+  gen.log.push(`${k}:${sp.kind}${sp.shinobi ? '*' : ''}${sp.x2 >= 0 ? 'd' : ''}${sp.mirror ? 'm' : ''}@${Math.round(sp.x)}`);
+  if (gen.log.length > 200) gen.log.shift();
+  return r;
+}
+function spawnIfNeeded() {
+  for (let i = 0; i < 4; i++) {
+    const last = rows[rows.length - 1];
+    if (!last) return;
+    const s = spacingAt(gen.k);
+    if (last.y - spawnY() >= s) addRow(last.y - s); else return;
+  }
+}
+function resetRows(seed) {
+  while (rows.length) rowPool.push(rows.pop());
+  gen.k = 0; gen.prevX = 180; gen.prevW = 170; gen.moveRun = 0; gen.afterShinobi = 0; gen.prevRange = null; gen.mirrorLeft = 0; gen.mirrorCool = 0; gen.log.length = 0;
+  gen.rng = mulberry32(seed >>> 0);
+  addRow(FY + 150); addRow(FY);
+}
+
+// ================= 物理（1/120秒） =================
+// 列のブロックまでの横の距離（隙間の縁は2px内側）。0 ならブロックの真上
+function blockDist(r, x) {
+  const hw = r.gapW / 2 + 2;
+  let g1l = r.gapX - hw, g1r = r.gapX + hw;
+  if (r.gap2X < 0) return Math.min(x - Math.min(x, g1l), Math.max(x, g1r) - x);
+  let g2l = r.gap2X - hw, g2r = r.gap2X + hw;
+  if (g2l < g1l) { const tl = g1l, tr = g1r; g1l = g2l; g1r = g2r; g2l = tl; g2r = tr; }
+  // 左 [-∞, g1l]、真ん中 [g1r, g2l]、右 [g2r, ∞]
+  const mid = x < g1r ? g1r - x : x > g2l ? x - g2l : 0;
+  return Math.min(x - Math.min(x, g1l), mid, Math.max(x, g2r) - x);
+}
+function collides(r) {
+  const y0 = r.y - RH / 2 + 2, y1 = r.y + RH / 2 - 2;
+  const cy = clamp(PY, y0, y1), dy = PY - cy, d = blockDist(r, player.x);
+  return d * d + dy * dy <= PR * PR;
+}
+const nextRow = () => { for (const r of rows) if (!r.passed) return r; return null; };
+const nextMirror = () => { const r = nextRow(); return !!(r && r.mirror); };
+function step() {
+  const v = G.v;
+  const closed = eye.mode === 'CLOSED';
+  let shinMoving = null;
+  for (const r of rows) {
+    r.y += v * DT;
+    if (closed && r.shinobi && r.drift && !r.passed) {
+      const lo = gapLo(r.gapW), hi = gapHi(r.gapW);
+      r.gapX += r.drift * DT;
+      if (r.gapX <= lo || r.gapX >= hi) { r.gapX = clamp(r.gapX, lo, hi); r.drift = 0; }
+      else shinMoving = r;
+    }
+  }
+  if (!SIM) { const on = !!shinMoving; if (on !== shinOn || (on && Math.abs(shinMoving.gapX - shinX) > 24)) { shinOn = on; shinX = on ? shinMoving.gapX : 0; sfx.shinobi(on, shinX); } }
+  const a = 1 - Math.exp(-DT / 0.05), m = PMAX * DT;
+  player.x += clamp((player.tx - player.x) * a, -m, m);
+  for (const r of rows) {
+    if (r.passed) continue;
+    if (Math.abs(r.y - PY) < RH / 2 + PR + 4) {
+      if (collides(r)) { die(r); return; }
+      let gapRoom = Math.min(player.x - PR - (r.gapX - r.gapW / 2), (r.gapX + r.gapW / 2) - (player.x + PR));
+      if (r.gap2X >= 0) gapRoom = Math.max(gapRoom, Math.min(player.x - PR - (r.gap2X - r.gapW / 2), (r.gap2X + r.gapW / 2) - (player.x + PR)));
+      if (gapRoom < r.minGap) r.minGap = gapRoom;
+    }
+    if (r.y - RH / 2 > PY + PR) { r.passed = true; onPass(r); }
+  }
+  while (rows.length && rows[0].y > LH + 20) rowPool.push(rows.shift());
+  spawnIfNeeded();
+  gameTime += DT; G.steps++;
+  if (mode === 'daily' && !SIM && (G.steps & 3) === 0 && G.trace.length < 8000) G.trace.push(Math.round(player.x)); // ゴースト用（30回/秒）
+}
+
+// ================= 得点 =================
+function onPass(r) {
+  G.passed++;
+  const dark = eye.mode === 'CLOSED' && eye.closedSince <= G.prevPassTime && r.k >= 1;
+  let pts;
+  if (dark) {
+    G.streak++; pts = Math.min(1 + G.streak, 5); G.darkRows++;
+    if (G.streak > G.maxStreak) G.maxStreak = G.streak;
+    if (!SIM) {
+      floater(r.gapX, PY - 20, `+${pts} 暗`, true); sfx.dark(r.gapW, r.gapX, G.streak); haptic(8); glowPulse = fxTime; ringFlash = fxTime;
+      if (S.hints.dark === 0) { S.hints.dark = 1; toast('閉じたまま抜けた。連続で増える'); }
+    }
+  } else {
+    pts = 1; G.streak = 0;
+    if (!SIM) { floater(r.gapX, PY - 20, '+1', false); sfx.pass(); for (let i = 0; i < 4; i++) spark(r.gapX + (i < 2 ? -r.gapW / 2 : r.gapW / 2), r.y, COL.paper, .2, 90); }
+  }
+  G.score += pts; G.prevPassTime = fxTime; G.v = speedAt(G.passed);
+  if (!SIM) {
+    dom.score = true;
+    if (mode === 'daily' && S.daily.ghost && !G.ghostBeaten && G.score > S.daily.ghostScore) { G.ghostBeaten = true; toast('今日のベストを超えた'); }
+    if (dom.bestHit) dom.best = true;
+    if (G.score > S.best && !dom.bestHit) { dom.bestHit = true; dom.best = true; if (S.best > 0) { floater(180, PY - 60, 'ベスト更新', true); for (let i = 0; i < 12; i++) spark(player.x, PY, COL.gold, .6, 160, -1); } }
+    if (r.minGap <= 6 && r.minGap > -1e8) {
+      if (!REDUCED) slowUntil = fxTime + .06;
+      const side = (player.x - r.gapX) > 0 ? 1 : -1, ex = r.gapX + side * r.gapW / 2;
+      const nc = eye.mode === 'CLOSED' ? COL.cyan : COL.ink2;
+      for (let i = 0; i < 6; i++) spark(ex, PY + (Math.random() - .5) * 10, nc, .35, 140);
+      floater(player.x, PY - 36, 'ヒヤリ', false); sfx.near(); haptic(12);
+    }
+  }
+}
+
+// ================= まぶた =================
+function setLid(toT, toB, dur, m) { eye.fromT = eye.top; eye.fromB = eye.bot; eye.toT = toT; eye.toB = toB; eye.t0 = fxTime; eye.dur = dur; eye.mode = m; }
+function lidProgress() { return clamp(1 - (eye.bot - eye.top) / LH, 0, 1); }
+function captureAfter(minY) {
+  after.rows.length = 0;
+  for (const r of rows) if (!r.passed && r.y >= minY) after.rows.push({ y: r.y, gapX: r.gapX, gapW: r.gapW, shinobi: r.shinobi, drift: r.drift, chev: r.chev, mirror: r.mirror, gap2X: r.gap2X });
+  after.t0 = fxTime; after.dur = afterDur(G.passed);
+}
+function eyeUpdate() {
+  const m = eye.mode;
+  if (m === 'CLOSING' || m === 'OPENING' || m === 'SQUINT_IN' || m === 'SQUINT_TO_CLOSED') {
+    const t = eye.dur > 0 ? clamp((fxTime - eye.t0) / eye.dur, 0, 1) : 1;
+    const e = m === 'OPENING' ? easeOutCubic(t) : easeInQuad(t);
+    eye.top = lerp(eye.fromT, eye.toT, e); eye.bot = lerp(eye.fromB, eye.toB, e);
+    if (t >= 1) {
+      if (m === 'CLOSING' || m === 'SQUINT_TO_CLOSED') { eye.mode = 'CLOSED'; eye.closedSince = fxTime; if (!SIM && state === ST.PLAY) sfx.humOn(true); }
+      else if (m === 'OPENING') { eye.mode = 'OPEN'; after.rows.length = 0; }
+      else eye.mode = 'SQUINT';
+    }
+  } else if (m === 'SQUINT' && fxTime - eye.downAt >= 0.4) {
+    captureAfter(PY - 90);
+    setLid(PY, PY, .12, 'SQUINT_TO_CLOSED');
+  }
+}
+function eyeOpenNow(dur) { if (eye.mode !== 'OPEN' && eye.mode !== 'OPENING') setLid(0, LH, dur, 'OPENING'); if (!SIM) sfx.humOn(false); }
+
+// ================= 入力 =================
+function touchBegin(lx, isMouse, id, ly) {
+  pointer.id = id; pointer.isMouse = isMouse; pointer.prevX = lx; pointer.lastX = lx; pointer.lastY = ly === undefined ? PY : ly;
+  player.tx = player.x;
+  eye.downAt = fxTime;
+  if (fxTime - lastRelease >= 0.25) {
+    captureAfter(FY - 10);
+    setLid(PY, PY, .08, 'CLOSING');
+    sfx.close(); haptic(5);
+  } else {
+    setLid(PY - 90, PY + 70, .08, 'SQUINT_IN');
+    if (S.hints.squint === 0) { S.hints.squint = 1; toast('薄目：近くだけ見える'); }
+  }
+}
+function touchMove(lx, ly) {
+  const dx = (lx - pointer.prevX) * (pointer.isMouse ? 1 : S.settings.gain) * (nextMirror() ? -1 : 1);
+  player.tx = clamp(player.tx + dx, PR, W - PR); pointer.prevX = lx; pointer.lastX = lx; if (ly !== undefined) pointer.lastY = ly;
+}
+function release(cancelled, lx, ly) {
+  if (pointer.id === null && !key.held) return;
+  pointer.id = null; key.held = false; key.dir = 0;
+  lastRelease = fxTime; G.streak = 0; player.tx = player.x;
+  if (state === ST.PLAY) { eyeOpenNow(.12); sfx.open(S.tier); fogPulse = fxTime; }
+  else if (eye.mode !== 'OPEN') eyeOpenNow(.12);
+  if (cancelled && state === ST.PLAY) {
+    cancelRing = { x: lx, y: ly, t0: fxTime };
+    if (++G.cancels >= 2 && S.hints.cancel === 0) { S.hints.cancel = 1; toast('画面の下端ぎりぎりは避けて'); }
+  }
+}
+function isUiTarget(t) { return !!(t && t.closest && t.closest('button,#settings,#shareBox')); }
+function onDown(e) {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (isUiTarget(e.target)) return;
+  if (pointer.id !== null || key.held) {
+    // 新しい主ポインタが来た＝前の指の pointerup を取りこぼしている。前の指を離した扱いにして続ける
+    if (e.isPrimary && e.pointerType !== 'mouse') release(false, pointer.lastX, pointer.lastY);
+    else { e.preventDefault(); return; }
+  }
+  e.preventDefault();
+  audioInit();
+  if (ui.settingsOpen) return;
+  const [lx, ly] = toLogical(e.clientX, e.clientY);
+  if (state === ST.RESULT) { resultTap(); return; }
+  if (state === ST.PAUSED) { resume(); return; }
+  if (state === ST.DEAD) return;
+  if (state === ST.READY && fxTime - readyAt < .15) return; // リザルトを閉じた直後の連打は吸収する
+  if (state === ST.TITLE || state === ST.READY) startPlay();
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  touchBegin(lx, e.pointerType === 'mouse', e.pointerId, ly);
+}
+function onMove(e) { if (e.pointerId !== pointer.id) return; e.preventDefault(); const [lx, ly] = toLogical(e.clientX, e.clientY); touchMove(lx, ly); }
+function onUp(e) {
+  audioInit(); // タッチの pointerup が「ユーザー操作」になるので、ここで AudioContext を動かす（Android / iOS）
+  if (e.pointerId !== pointer.id) return;
+  const cancelled = e.type === 'pointercancel';
+  const [lx, ly] = cancelled ? [pointer.lastX, pointer.lastY] : toLogical(e.clientX, e.clientY);
+  release(cancelled, lx, ly);
+}
+
+// ================= 進行 =================
+const dom = { score: true, best: true, bestHit: false, mode: true, dark: false };
+let readyAt = -9, resultAt = -9;
+const ui = { settingsOpen: false, resetArmed: -9 };
+function newSeed() { return (Date.now() ^ (Math.random() * 4294967296)) >>> 0; }
+function dailySeed(date) { return hashStr('anten:' + date); }
+function toReady() {
+  state = ST.READY; readyAt = fxTime;
+  G.score = 0; G.passed = 0; G.streak = 0; G.maxStreak = 0; G.darkRows = 0; G.v = 140; G.prevPassTime = -1; G.cancels = 0; G.steps = 0; G.trace = []; G.ghostBeaten = false; gameTime = 0;
+  player.x = player.tx = 180; player.trail.length = 0;
+  killer = null; deadPoint = null; cracks.length = 0; particles.length = 0; floaters.length = 0; unlockFx = null; shinOn = false;
+  after.rows.length = 0; eye.mode = 'OPEN'; eye.top = 0; eye.bot = LH; eye.closedSince = -1;
+  dom.bestHit = false; dom.score = dom.best = dom.mode = true;
+  if (mode === 'daily') { checkDailyDate(); resetRows(dailySeed(S.daily.date)); } else resetRows(newSeed());
+  if (SIM) return;
+  $('hud').classList.remove('off');
+  $('result').classList.remove('open');
+}
+function startPlay() {
+  if (state === ST.TITLE) { $('title').classList.add('gone'); document.body.classList.remove('intro'); if (rows.length === 0) toReady(); }
+  state = ST.PLAY; G.round++; S.totalPlays++;
+  if (mode === 'daily') { checkDailyDate(); S.daily.tries = Math.min(S.daily.tries + 1, 3); persist(); } // 挑戦は始めた時点で1回と数える（途中で閉じても同じ配置をやり直せない）
+  showLidHint = S.hints.firstTouch < 3;
+  if (showLidHint) S.hints.firstTouch++;
+  $('hud').classList.remove('off');
+  dom.mode = true;
+}
+function die(r) {
+  state = ST.DEAD; killer = r; r.flashT0 = fxTime; deadPoint = { x: player.x, y: PY }; deathAt = fxTime;
+  pointer.id = null; key.held = false;
+  if (SIM) return;
+  hitstopUntil = fxTime + .15;
+  sfx.die(); sfx.humOn(false); sfx.shinobi(false); shinOn = false; haptic(60);
+  later(.15, () => {
+    eyeOpenNow(.06);
+    const col = emberColor();
+    for (let i = 0; i < 24; i++) { const a = Math.random() * Math.PI * 2, s = 80 + Math.random() * 220; particles.push({ x: player.x, y: PY, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: .9, max: .9, size: 2 + Math.random() * 3, col, g: 200 }); }
+    if (!REDUCED) shake = { amp: 8, t0: fxTime, dur: .3 };
+    cracks.length = 0;
+    for (let i = 0; i < 5; i++) {
+      const pts = [[player.x, PY]]; let a = (i / 5) * Math.PI * 2 + Math.random() * .8, x = player.x, y = PY;
+      for (let j = 0; j < 4; j++) { const len = 12 + Math.random() * 18; a += (Math.random() - .5) * 1.1; x += Math.cos(a) * len; y += Math.sin(a) * len; pts.push([x, y]); }
+      cracks.push({ pts, t0: fxTime });
+    }
+  });
+  later(.65, showResult);
+}
+function showResult() {
+  state = ST.RESULT; resultAt = fxTime;
+  const isBest = G.score > S.best, prevTier = S.tier;
+  if (isBest) { S.best = G.score; S.bestRows = G.passed; S.bestDate = localDateStr(); }
+  if (G.maxStreak > S.maxDarkStreak) S.maxDarkStreak = G.maxStreak;
+  S.totalRows += G.passed; S.totalDarkRows += G.darkRows;
+  S.tier = tierOf(S.totalRows);
+  if (mode === 'daily') {
+    if (G.score > S.daily.best || !S.daily.ghost) { S.daily.ghost = G.trace.slice(); S.daily.ghostScore = G.score; }
+    if (G.score > S.daily.best) { S.daily.best = G.score; S.daily.bestRows = G.passed; S.daily.bestDark = G.darkRows; }
+    const h = S.dailyHistory.filter(x => x.date !== S.daily.date); h.push({ date: S.daily.date, best: S.daily.best }); S.dailyHistory = h.slice(-30);
+    if (S.daily.tries >= 3) haptic([15, 30, 15]);
+  }
+  persist();
+  $('rScore').textContent = G.score; $('rScore').classList.toggle('gold', isBest && G.score > 0);
+  $('rBadge').hidden = !(isBest && G.score > 0); $('rBadge').classList.toggle('gold', isBest);
+  $('rRankName').textContent = rankOf(S.best);
+  $('rRows').textContent = G.passed; $('rDark').textContent = G.darkRows; $('rStreak').textContent = G.maxStreak;
+  const next = EMBERS[S.tier + 1];
+  $('rProgBar').style.width = '0%';
+  if (next) { $('rProgL').textContent = `${next.name}の熾火まで`; $('rProgR').textContent = `${S.totalRows} / ${next.at} 列`; requestAnimationFrame(() => { $('rProgBar').style.width = `${clamp(S.totalRows / next.at * 100, 0, 100)}%`; }); }
+  else { $('rProgL').textContent = '熾火は虹（最終）'; $('rProgR').textContent = `累計 ${S.totalRows} 列`; requestAnimationFrame(() => { $('rProgBar').style.width = '100%'; }); }
+  const daily = mode === 'daily', done = daily && S.daily.tries >= 3;
+  $('rDaily').hidden = !daily;
+  $('rDaily').innerHTML = daily ? (done ? `今日の記録 <b>${S.daily.best}</b>点 ／ 明日また` : `今日の暗転 ${S.daily.tries}/3 ｜ 今日のベスト ${S.daily.best}`) : '';
+  $('rTap').textContent = done ? 'タップでエンドレスへ' : daily ? 'タップで次の挑戦' : 'タップでもう一回';
+  $('rShare').hidden = !done; $('rEndless').hidden = !daily; $('rDailyBtn').hidden = daily;
+  $('result').classList.add('open');
+  if (isBest && G.score > 0) haptic([20, 40, 20]);
+  sfx.result(isBest && G.score > 0);
+  if (S.tier > prevTier) later(.4, () => { if (state !== ST.RESULT) return; unlockFx = { t0: fxTime, from: EMBERS[prevTier].col || '#fff', to: EMBERS[S.tier].col || '#fff' }; toast(`熾火が${EMBERS[S.tier].name}になった`); sfx.unlock(); haptic([10, 30, 10, 30, 30]); });
+  if (bot) later(.3, () => { if (state === ST.RESULT) { resultTap(); later(.2, () => { if (state === ST.READY) startPlay(); }); } });
+}
+function resultTap() {
+  if (fxTime - resultAt < .4) return; // 出た直後の連打で結果を見逃さないように
+  sfx.btn();
+  if (mode === 'daily' && S.daily.tries >= 3) mode = 'endless';
+  toReady();
+}
+function pause() {
+  if (state !== ST.PLAY) return;
+  release(false, 0, 0);
+  sfx.shinobi(false); shinOn = false;
+  state = ST.PAUSED; $('pause').classList.add('open');
+}
+function resume() {
+  if (state !== ST.PAUSED) return;
+  state = ST.PLAY; freezeUntil = fxTime + .5; $('pause').classList.remove('open');
+  if (A.ctx) quiet(A.ctx.resume());
+}
+function checkDailyDate() {
+  const today = localDateStr();
+  if (S.daily.date !== today) { S.daily = { date: today, tries: 0, best: 0, bestRows: 0, bestDark: 0, ghost: null, ghostScore: 0 }; }
+}
+function enterDaily() {
+  sfx.btn(); checkDailyDate();
+  mode = 'daily';
+  if (S.daily.tries >= 3) {
+    // 今日の分は終わっている: 記録と共有だけ見せる
+    G.score = S.daily.best; G.passed = S.daily.bestRows; G.darkRows = S.daily.bestDark; G.maxStreak = 0;
+    state = ST.RESULT; resultAt = fxTime;
+    $('title').classList.add('gone'); document.body.classList.remove('intro');
+    $('rScore').textContent = S.daily.best; $('rScore').classList.remove('gold'); $('rBadge').hidden = true;
+    $('rRankName').textContent = rankOf(S.best);
+    $('rRows').textContent = S.daily.bestRows; $('rDark').textContent = S.daily.bestDark; $('rStreak').textContent = '-';
+    $('rDaily').hidden = false; $('rDaily').innerHTML = `今日の記録 <b>${S.daily.best}</b>点 ／ 明日また`;
+    $('rTap').textContent = 'タップでエンドレスへ';
+    $('rShare').hidden = false; $('rEndless').hidden = false; $('rDailyBtn').hidden = true;
+    $('rProgL').textContent = '今日の暗転'; $('rProgR').textContent = '3/3 回'; $('rProgBar').style.width = '100%';
+    $('result').classList.add('open');
+    return;
+  }
+  $('title').classList.add('gone'); document.body.classList.remove('intro');
+  toReady();
+  toast(`今日の暗転 ${S.daily.tries + 1}/3 回目`);
+}
+function shareText() {
+  const d = S.daily.date.replace(/-/g, '/');
+  return `暗転 ${d}｜${S.daily.best}点（${S.daily.bestRows}列・暗${S.daily.bestDark}）｜段位 ${rankOf(S.best)}`;
+}
+async function share() {
+  sfx.btn();
+  const text = shareText();
+  try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); toast('コピーした'); return; } } catch (e) {}
+  const box = $('shareBox'), ta = $('shareText');
+  ta.value = text; box.hidden = false; ta.focus(); ta.select();
+  later(6, () => { box.hidden = true; });
+}
+
+// ================= 演出の部品 =================
+function floater(x, y, text, dark) { if (SIM) return; if (floaters.length >= 8) floaters.shift(); floaters.push({ x, y, text, dark, t0: fxTime }); }
+function spark(x, y, col, life, speed, dirY) {
+  if (SIM || particles.length >= 64) return;
+  const a = dirY === -1 ? -Math.PI / 2 + (Math.random() - .5) * 1.2 : Math.random() * Math.PI * 2, s = speed * (.5 + Math.random() * .5);
+  particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life, max: life, size: 1.5 + Math.random() * 2, col, g: 0 });
+}
+function toast(text) {
+  if (SIM) return;
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = text; $('toasts').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 500); }, 1800);
+}
+function emberColor() {
+  const e = EMBERS[S.tier];
+  if (e.col) return e.col;
+  return `hsl(${Math.floor(fxTime / 4 * 60) % 60 * 6} 90% 72%)`;
+}
+
+// ================= 描画 =================
+function rrect(x, y, w, h, r) {
+  if (w <= 0 || h <= 0) return;
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+}
+function blockPaths(r, fill, stroke) {
+  const y = r.y - RH / 2, hw = r.gapW / 2;
+  let a = r.gapX, b = r.gap2X;
+  if (b >= 0 && b < a) { const t = a; a = b; b = t; }
+  ctx.fillStyle = fill; if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; }
+  rrect(-8, y, a - hw + 8, RH, 3); ctx.fill(); if (stroke) ctx.stroke();
+  if (b >= 0) { rrect(a + hw, y, b - a - 2 * hw, RH, 3); ctx.fill(); if (stroke) ctx.stroke(); }
+  const last = b >= 0 ? b : a;
+  rrect(last + hw, y, W - last - hw + 8, RH, 3); ctx.fill(); if (stroke) ctx.stroke();
+}
+function mirrorMark(r, col) {
+  ctx.fillStyle = col; ctx.font = F11B; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('鏡', r.gapX, r.y); if (r.gap2X >= 0) ctx.fillText('鏡', r.gap2X, r.y);
+}
+function drawGhost(dark) {
+  if (mode !== 'daily' || !S.daily.ghost || (state !== ST.PLAY && state !== ST.DEAD)) return;
+  const i = Math.floor(gameTime * 30);
+  if (i >= S.daily.ghost.length) return;
+  const gx = S.daily.ghost[i];
+  ctx.globalAlpha = dark ? .35 : .55; ctx.strokeStyle = dark ? COL.cyan : COL.ink3; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(gx, PY, 8, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = dark ? COL.cyan : COL.ink3; ctx.font = F11; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('ベスト', gx, PY + 20);
+  ctx.globalAlpha = 1;
+}
+function chevrons(r, col) {
+  const n = r.chev, d = r.drift > 0 ? 1 : -1, y = r.y;
+  ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // 隙間の両脇のブロックに、動く向きの山形
+  for (const side of [-1, 1]) {
+    const edge = r.gapX + side * r.gapW / 2, base = edge + side * 10;
+    for (let i = 0; i < n; i++) {
+      const cx = base + side * i * 7;
+      ctx.beginPath(); ctx.moveTo(cx - d * 3, y - 4); ctx.lineTo(cx + d * 3, y); ctx.lineTo(cx - d * 3, y + 4); ctx.stroke();
+    }
+  }
+}
+function gapMark(r, col) { ctx.fillStyle = col; ctx.fillRect(r.gapX - .5, r.y - 3, 1, 6); if (r.gap2X >= 0) ctx.fillRect(r.gap2X - .5, r.y - 3, 1, 6); }
+function drawWorld(squint) {
+  if (!squint) {
+    ctx.strokeStyle = COL.grid; ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = 0; x <= W; x += 40) { ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, LH); }
+    for (let y = (gridOff % 40) - 40; y <= LH; y += 40) { ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); }
+    ctx.stroke();
+    if (G.v >= 300 && !REDUCED && state === ST.PLAY) {
+      ctx.strokeStyle = 'rgba(21,22,26,0.08)'; ctx.lineWidth = 1; ctx.beginPath();
+      for (const l of speedLines) { ctx.moveTo(l.x, l.y); ctx.lineTo(l.x, l.y + l.len); }
+      ctx.stroke();
+    }
+  }
+  const inkCol = squint ? COL.ink3 : COL.ink;
+  for (const r of rows) {
+    let fill = inkCol;
+    if (r === killer && fxTime - r.flashT0 < .4 && Math.floor((fxTime - r.flashT0) / .0667) % 2 === 0) fill = COL.red;
+    blockPaths(r, fill, null);
+    gapMark(r, squint ? COL.paper2 : COL.ink3);
+    if (r.shinobi && r.drift) chevrons(r, COL.paper);
+    if (r.mirror) mirrorMark(r, squint ? COL.ink3 : COL.ink2);
+    if (r.label && !squint) {
+      ctx.fillStyle = COL.ink3; ctx.font = F11; ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(r.label).width, right = r.gapX < 180;
+      let tx = right ? r.gapX + r.gapW / 2 + 12 : r.gapX - r.gapW / 2 - 12 - tw;
+      tx = clamp(tx, 6, W - 6 - tw); ctx.textAlign = 'left';
+      ctx.fillText(r.label, tx, r.y - RH);
+    }
+  }
+  drawGhost(false);
+  // 霧
+  if (!squint) {
+    const fogA = fxTime - fogPulse < .15 ? .35 : .2;
+    ctx.fillStyle = fogGrad; ctx.fillRect(0, -OY / SC - 2, W, FY + 24 + OY / SC + 2);
+    for (let i = 0; i < 2; i++) {
+      const per = i ? 11 : 7, amp = i ? 14 : 20, h = i ? 30 : 44;
+      const yy = FY - 30 + Math.sin(fxTime * Math.PI * 2 / per) * amp;
+      ctx.save(); ctx.translate(0, yy); ctx.fillStyle = fogBands[h + ':' + fogA]; ctx.fillRect(0, -h / 2, W, h); ctx.restore();
+    }
+  }
+  if (state === ST.READY) {
+    ctx.globalAlpha = .55 + .45 * Math.sin(fxTime * 2.6); ctx.fillStyle = COL.ink2; ctx.font = F13; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('触れて開始', W / 2, PY + 72); ctx.globalAlpha = 1;
+  }
+  drawTrail(1);
+  drawEmber(1, false);
+}
+function drawTrail(alpha) {
+  const n = player.trail.length;
+  for (let i = 0; i < n; i++) {
+    const p = player.trail[i], t = (i + 1) / (n + 1);
+    ctx.globalAlpha = alpha * t * .35; ctx.fillStyle = emberColor();
+    ctx.beginPath(); ctx.arc(p[0], p[1], 3 + 7 * t, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+function emberGradient(col) {
+  if (emberGradCol !== col || !emberGrad) {
+    emberGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
+    emberGrad.addColorStop(0, '#FFFFFF'); emberGrad.addColorStop(.3, col); emberGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    emberGradCol = col;
+  }
+  return emberGrad;
+}
+function drawEmber(alpha, dark) {
+  if ((state === ST.DEAD && fxTime - deathAt >= .15) || (state === ST.RESULT && deadPoint && !(unlockFx && fxTime - unlockFx.t0 < 1.5))) return;
+  let col = emberColor();
+  if (unlockFx) { const t = clamp((fxTime - unlockFx.t0) / 1, 0, 1); col = t < 1 ? mixColor(unlockFx.from, unlockFx.to, t) : unlockFx.to; }
+  const pulse = fxTime - glowPulse < .12 ? 1 + .6 * Math.sin((fxTime - glowPulse) / .12 * Math.PI) : 1;
+  ctx.save(); ctx.translate(player.x, PY);
+  ctx.globalAlpha = alpha * (dark ? .7 : 1);
+  ctx.scale(pulse, pulse);
+  if (!dark) { ctx.fillStyle = 'rgba(21,22,26,0.07)'; ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = emberGradient(col); ctx.beginPath(); ctx.arc(0, 0, 28, 0, Math.PI * 2); ctx.fill();
+  ctx.scale(1 / pulse, 1 / pulse);
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
+  if (!dark) { ctx.strokeStyle = COL.ink2; ctx.lineWidth = 1.5; ctx.stroke(); }
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
+  if (G.streak >= 3 && state === ST.PLAY) {
+    ctx.fillStyle = COL.cyan;
+    for (let i = 0; i < 4; i++) { const a = fxTime * Math.PI + i * Math.PI / 2; ctx.beginPath(); ctx.arc(Math.cos(a) * 20, Math.sin(a) * 20, 1.8, 0, Math.PI * 2); ctx.fill(); }
+  }
+  if (G.streak >= 1 && state === ST.PLAY) { ctx.fillStyle = dark ? COL.cyan : COL.ink2; ctx.font = F11B; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(`暗×${G.streak}`, 22, -22); }
+  if (unlockFx) { const t = clamp((fxTime - unlockFx.t0) / 1, 0, 1); if (t < 1) { ctx.globalAlpha = (1 - t) * .8; ctx.strokeStyle = unlockFx.to; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 10 + 60 * easeOutCubic(t), 0, Math.PI * 2); ctx.stroke(); } }
+  ctx.restore();
+}
+function mixColor(a, b, t) {
+  const pa = hex(a), pb = hex(b);
+  return `rgb(${Math.round(lerp(pa[0], pb[0], t))},${Math.round(lerp(pa[1], pb[1], t))},${Math.round(lerp(pa[2], pb[2], t))})`;
+}
+function hex(h) { if (h[0] !== '#') return [255, 255, 255]; const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function drawAfter(mul) {
+  if (!after.rows.length) return;
+  const t = (fxTime - after.t0) / after.dur;
+  if (t >= 1) return;
+  const a = (1 - t) * (1 - t) * mul;
+  if (a <= 0.002) return;
+  for (const r of after.rows) {
+    const sh = r.shinobi && r.drift, col = sh ? COL.amber : COL.cyan;
+    ctx.globalAlpha = a; blockPaths(r, sh ? 'rgba(255,179,107,0.35)' : 'rgba(91,232,255,0.35)', col);
+    gapMark(r, col);
+    if (r.shinobi && r.drift) chevrons(r, col);
+    if (r.mirror) mirrorMark(r, col);
+  }
+  ctx.globalAlpha = 1;
+}
+function drawLids() {
+  const top = eye.top, bot = eye.bot;
+  ctx.fillStyle = COL.dark;
+  // 上まぶた（縁は中央が12px下がる）
+  const L = -OX / SC - 2, R = W + OX / SC + 2, T = -OY / SC - 2, B = LH + OY / SC + 2;
+  ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, top); ctx.quadraticCurveTo(W / 2, top + 24, R, top); ctx.lineTo(R, T); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = COL.darkEdge; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(L, top); ctx.quadraticCurveTo(W / 2, top + 24, R, top); ctx.stroke();
+  // 下まぶた
+  ctx.fillStyle = COL.dark;
+  ctx.beginPath(); ctx.moveTo(L, B); ctx.lineTo(L, bot); ctx.quadraticCurveTo(W / 2, bot - 24, R, bot); ctx.lineTo(R, B); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = COL.darkEdge; ctx.beginPath(); ctx.moveTo(L, bot); ctx.quadraticCurveTo(W / 2, bot - 24, R, bot); ctx.stroke();
+}
+function drawDark() {
+  ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, LH);
+  drawAfter(1);
+  ctx.strokeStyle = COL.darkEdge; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, PY + .5); ctx.lineTo(W, PY + .5); ctx.stroke();
+  if (showLidHint && state === ST.PLAY) { ctx.fillStyle = COL.ink3; ctx.font = F12; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('離すと見える', W / 2, PY + 44); }
+  drawGhost(true);
+  drawTrail(.7);
+  drawEmber(1, true);
+  if (state === ST.PLAY && nextMirror()) { ctx.fillStyle = COL.cyan; ctx.font = F11B; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText('鏡 ⇄', player.x - 22, PY - 22); }
+  // 閉眼リング（1秒で1周）
+  if (eye.mode === 'CLOSED' && state === ST.PLAY) {
+    const t = (fxTime - eye.closedSince) % 1, bright = fxTime - ringFlash < 1;
+    ctx.strokeStyle = COL.cyan; ctx.lineWidth = bright ? 2.5 : 1.5; ctx.globalAlpha = bright ? 1 : .8;
+    ctx.beginPath(); ctx.arc(player.x, PY, 18, -Math.PI / 2, -Math.PI / 2 + t * Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+}
+function drawFloaters(dark) {
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i], t = (fxTime - f.t0) / .6;
+    if (t >= 1) { floaters.splice(i, 1); continue; }
+    ctx.globalAlpha = 1 - t * t; ctx.fillStyle = dark ? COL.cyan : f.dark ? '#1098B8' : COL.ink2;
+    ctx.font = f.dark ? F16 : F14;
+    ctx.fillText(f.text, f.x, f.y - 40 * easeOutCubic(t));
+  }
+  ctx.globalAlpha = 1;
+}
+function drawParticles() {
+  for (const p of particles) { ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); }
+  ctx.globalAlpha = 1;
+}
+function drawCracks() {
+  if (!cracks.length) return;
+  ctx.strokeStyle = COL.dark; ctx.lineWidth = 1.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const c of cracks) {
+    const t = clamp((fxTime - c.t0) / .2, 0, 1), n = c.pts.length - 1, seg = t * n;
+    ctx.beginPath(); ctx.moveTo(c.pts[0][0], c.pts[0][1]);
+    for (let i = 1; i <= n; i++) {
+      if (i <= seg) ctx.lineTo(c.pts[i][0], c.pts[i][1]);
+      else { const f = seg - (i - 1); if (f > 0) ctx.lineTo(lerp(c.pts[i - 1][0], c.pts[i][0], f), lerp(c.pts[i - 1][1], c.pts[i][1], f)); break; }
+    }
+    ctx.stroke();
+  }
+}
+function drawCancelRing() {
+  if (!cancelRing) return;
+  const t = (fxTime - cancelRing.t0) / .4;
+  if (t >= 1) { cancelRing = null; return; }
+  ctx.globalAlpha = 1 - t; ctx.strokeStyle = COL.ink3; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cancelRing.x, cancelRing.y, 24 + 16 * t, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = COL.ink3; ctx.font = F11; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('指が外れた', cancelRing.x, cancelRing.y - 34);
+  ctx.globalAlpha = 1;
+}
+function render() {
+  const lp = lidProgress(), closed = eye.mode === 'CLOSED';
+  let sx = 0, sy = 0;
+  if (fxTime - shake.t0 < shake.dur) { const t = (fxTime - shake.t0) / shake.dur; const a = shake.amp * (1 - t); sx = (Math.random() * 2 - 1) * a; sy = (Math.random() * 2 - 1) * a; }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = closed ? COL.dark : COL.paper; ctx.fillRect(0, 0, cssW, cssH);
+  ctx.setTransform(DPR * SC, 0, 0, DPR * SC, DPR * (OX + sx * SC), DPR * (OY + sy * SC));
+  if (closed) {
+    drawDark();
+    drawFloaters(true); drawParticles();
+  } else {
+    drawWorld(eye.mode === 'SQUINT' || eye.mode === 'SQUINT_IN' || eye.mode === 'SQUINT_TO_CLOSED');
+    drawFloaters(false); drawParticles(); drawCracks();
+    if (lp > 0.001) {
+      drawLids();
+      drawAfter(lp);
+      drawEmber(lp, true);
+    }
+  }
+  drawCancelRing();
+  const darkNow = lp > .5;
+  if (darkNow !== dom.dark) { dom.dark = darkNow; document.body.classList.toggle('dark', darkNow); if (themeMeta) themeMeta.content = darkNow ? COL.dark : COL.paper; statusBarDark(darkNow); }
+}
+
+// ================= 毎フレーム =================
+function updateFx(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.life -= dt; if (p.life <= 0) { particles.splice(i, 1); continue; }
+    p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= (1 - 2 * dt);
+  }
+  if (state === ST.PLAY) {
+    player.trail.push([player.x, PY]); if (player.trail.length > 8) player.trail.shift();
+    if (G.v >= 300 && !REDUCED) {
+      while (speedLines.length < 6) speedLines.push({ x: Math.random() * W, y: Math.random() * LH, len: 40 + Math.random() * 80 });
+      for (const l of speedLines) { l.y += G.v * 1.5 * dt; if (l.y > LH) { l.y = -l.len; l.x = Math.random() * W; } }
+    }
+  }
+}
+function updateDom() {
+  if (dom.score) { dom.score = false; const el = $('score'); el.textContent = G.score; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); el.classList.toggle('gold', dom.bestHit && S.best > 0 && G.score > S.best); }
+  if (dom.best) { dom.best = false; const b = Math.max(S.best, dom.bestHit ? G.score : 0); $('best').textContent = `ベスト ${b}`; $('best').classList.toggle('gold', dom.bestHit && S.best > 0); }
+  if (dom.mode) { dom.mode = false; $('mode').textContent = mode === 'daily' ? `今日 ${Math.min(state === ST.READY ? S.daily.tries + 1 : S.daily.tries, 3)}/3` : ''; }
+}
+let lastT = 0, acc = 0;
+function frame(ts) { requestAnimationFrame(frame); tick(ts / 1000); }
+function tick(now) {
+  let dt = lastT ? now - lastT : 0; lastT = now; dt = clamp(dt, 0, .05);
+  fxTime += dt;
+  runTimers();
+  eyeUpdate();
+  if (bot && state === ST.PLAY) botTick(dt);
+  if (key.held && state === ST.PLAY && key.dir) player.tx = clamp(player.tx + key.dir * (nextMirror() ? -1 : 1) * 600 * dt, PR, W - PR);
+  if (state === ST.PLAY && fxTime >= freezeUntil) {
+    const scale = fxTime < hitstopUntil ? 0 : fxTime < slowUntil ? .4 : 1;
+    acc += dt * scale; let n = 0;
+    while (acc >= DT && n < 6) { step(); acc -= DT; n++; if (state !== ST.PLAY) { acc = 0; break; } }
+    if (acc > DT * 6) acc = 0;
+    gridOff += G.v * dt * scale;
+  } else acc = 0;
+  updateFx(dt);
+  const lidsSettled = eye.mode === 'OPEN' && lidProgress() <= 0.001;
+  if (state === ST.PAUSED && lidsSettled) { if (!pausedDrawn) { pausedDrawn = true; render(); } }
+  else { pausedDrawn = false; render(); }
+  updateDom();
+}
+
+// ================= 自動操縦（検証用） =================
+// A: 目を気にせず、通過の120ms後から次の隙間の中心へ 540px/s で向かう（列が届く範囲にあることの検査）
+// B: 常に閉眼（忍び列が最大限に動く）で、忍び列は到着時刻の予測位置を狙う
+function botTarget(kind) {
+  let r = null; for (const q of rows) if (!q.passed) { r = q; break; }
+  if (!r) return player.x;
+  if (kind === 'B' && r.shinobi && r.drift) { const tt = Math.max(0, (PY - r.y) / G.v); return clamp(r.gapX + r.drift * tt, gapLo(r.gapW), gapHi(r.gapW)); }
+  return r.gapX;
+}
+function botTick(dt) {
+  if (G.passed > 0 && fxTime - G.prevPassTime < .12) return;
+  const tgt = botTarget('A'), d = tgt - player.tx, m = 540 * dt;
+  player.tx = clamp(player.tx + clamp(d, -m, m), PR, W - PR);
+}
+// 画面なしで n 列ぶん進める。死んだら {ok:false, k, log} を返す
+function simulate({ seed = 1, n = 300, kind = 'A', log: keepLog = false } = {}) {
+  const saved = { state, mode, SIM, eye: { ...eye }, player: { x: player.x, tx: player.tx, trail: player.trail.slice() }, G: { ...G }, gameTime, fxTime, rows: rows.slice(), gen: { ...gen, log: gen.log.slice() },
+    hitstopUntil, slowUntil, freezeUntil, readyAt, dom: { ...dom }, after: { rows: after.rows.slice(), t0: after.t0, dur: after.dur }, particles: particles.slice(), floaters: floaters.slice(), cracks: cracks.slice(), killer, deadPoint, unlockFx, shinOn };
+  SIM = true; mode = 'endless'; state = ST.READY;
+  rows.length = 0; gen.rng = Math.random; toReady(); state = ST.PLAY;
+  resetRows(seed);
+  if (kind === 'B') { eye.mode = 'CLOSED'; eye.closedSince = -1; } else { eye.mode = 'OPEN'; }
+  let t = 0, steps = 0, ok = true, kDied = -1;
+  const DTs = DT;
+  while (G.passed < n && steps < 400000) {
+    // ボットの移動（フレーム相当 1/60 ごと）
+    if (steps % 2 === 0) {
+      const dt = 1 / 60;
+      if (!(G.passed > 0 && t - G.prevPassTime < .12)) { const tgt = botTarget(kind), d = tgt - player.tx, m = 540 * dt; player.tx = clamp(player.tx + clamp(d, -m, m), PR, W - PR); }
+    }
+    fxTime = t; step(); t += DTs; steps++;
+    if (state !== ST.PLAY) { ok = false; kDied = G.passed; break; }
+  }
+  const result = { ok, seed, kind, passed: G.passed, died: kDied, log: keepLog ? gen.log.slice() : undefined };
+  // 元に戻す
+  SIM = saved.SIM; mode = saved.mode; Object.assign(G, saved.G); gameTime = saved.gameTime; fxTime = saved.fxTime;
+  rows.length = 0; for (const r of saved.rows) rows.push(r); Object.assign(gen, saved.gen); gen.log.splice(0, gen.log.length, ...saved.gen.log); Object.assign(eye, saved.eye);
+  player.x = saved.player.x; player.tx = saved.player.tx; player.trail.splice(0, player.trail.length, ...saved.player.trail); state = saved.state;
+  hitstopUntil = saved.hitstopUntil; slowUntil = saved.slowUntil; freezeUntil = saved.freezeUntil; readyAt = saved.readyAt; Object.assign(dom, saved.dom);
+  after.rows.splice(0, after.rows.length, ...saved.after.rows); after.t0 = saved.after.t0; after.dur = saved.after.dur;
+  particles.splice(0, particles.length, ...saved.particles); floaters.splice(0, floaters.length, ...saved.floaters); cracks.splice(0, cracks.length, ...saved.cracks);
+  killer = saved.killer; deadPoint = saved.deadPoint; unlockFx = saved.unlockFx; shinOn = saved.shinOn;
+  return result;
+}
+// 検証用: 画面が止まっていても内部時間を sec 秒ぶん進める（60fps 相当）
+function advance(sec) { let now = lastT || 0; for (let i = 0, n = Math.round(sec * 60); i < n; i++) { now += 1 / 60; tick(now); } return fxTime; }
+window.__anten = { simulate, advance, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
+
+// ================= 画面のつなぎ =================
+function refreshTitle() {
+  $('tStats').textContent = `ベスト ${S.best} ｜ 累計 ${S.totalRows.toLocaleString()}列`;
+  $('tag2').hidden = S.totalPlays >= 3;
+  $('tSoundIcon').innerHTML = `<use href="#i-${S.settings.sound ? 'spk' : 'spkoff'}"/>`;
+}
+function refreshSettings() {
+  $('swSound').classList.toggle('on', S.settings.sound); $('swSound').setAttribute('aria-checked', S.settings.sound);
+  $('swVibe').classList.toggle('on', S.settings.vibe); $('swVibe').setAttribute('aria-checked', S.settings.vibe);
+  $('rowNotify').hidden = !(NATIVE && CAP.LocalNotifications);
+  $('swNotify').classList.toggle('on', S.settings.notify); $('swNotify').setAttribute('aria-checked', S.settings.notify);
+  for (const b of $('segGain').children) b.classList.toggle('on', Number(b.dataset.g) === S.settings.gain);
+  $('sReset').textContent = '消す'; ui.resetArmed = -9;
+}
+function openSettings() { sfx.btn(); refreshSettings(); ui.settingsOpen = true; $('settings').classList.add('open'); $('scrim').classList.add('open'); if (state === ST.PLAY) pause(); }
+function closeSettings() { ui.settingsOpen = false; $('settings').classList.remove('open'); $('scrim').classList.remove('open'); refreshTitle(); persist(); }
+$('tSettings').addEventListener('click', openSettings);
+$('rSettings').addEventListener('click', openSettings);
+$('sClose').addEventListener('click', () => { sfx.btn(); closeSettings(); });
+$('scrim').addEventListener('click', closeSettings);
+$('settings').addEventListener('pointerdown', e => e.stopPropagation());
+$('tSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); persist(); refreshTitle(); sfx.btn(); });
+$('swSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); refreshSettings(); sfx.btn(); });
+$('swVibe').addEventListener('click', () => { S.settings.vibe = !S.settings.vibe; refreshSettings(); sfx.btn(); haptic(8); });
+$('swNotify').addEventListener('click', () => { S.settings.notify = !S.settings.notify; persist(); refreshSettings(); sfx.btn(); notifyApply(true); });
+$('segGain').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.settings.gain = Number(b.dataset.g); refreshSettings(); sfx.btn(); });
+$('sReset').addEventListener('click', () => {
+  sfx.btn();
+  if (fxTime - ui.resetArmed < 3) { S = DEF(); persist(); setMaster(); refreshSettings(); refreshTitle(); dom.best = dom.score = dom.mode = true; toast('消した'); return; }
+  ui.resetArmed = fxTime; $('sReset').textContent = '本当に消す？';
+  later(3, () => { if (fxTime - ui.resetArmed >= 3) $('sReset').textContent = '消す'; });
+});
+$('tDaily').addEventListener('click', enterDaily);
+$('rDailyBtn').addEventListener('click', () => { $('result').classList.remove('open'); enterDaily(); });
+$('rShare').addEventListener('click', share);
+$('rEndless').addEventListener('click', () => { sfx.btn(); mode = 'endless'; toReady(); });
+$('pauseBtn').addEventListener('click', () => { sfx.btn(); if (state === ST.PLAY) pause(); else if (state === ST.PAUSED) resume(); });
+$('pause').addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); resume(); });
+$('result').addEventListener('pointerdown', e => { if (isUiTarget(e.target) || state !== ST.RESULT) return; e.stopPropagation(); e.preventDefault(); resultTap(); });
+for (const row of document.querySelectorAll('.srow')) row.addEventListener('click', e => { const sw = row.querySelector('.sw'); if (sw && !e.target.closest('button')) sw.click(); });
+for (const t of ['contextmenu', 'gesturestart', 'dblclick']) document.addEventListener(t, e => { if (!isUiTarget(e.target)) e.preventDefault(); }, { passive: false });
+document.addEventListener('pointerdown', onDown, { passive: false });
+document.addEventListener('pointermove', onMove, { passive: false });
+document.addEventListener('pointerup', onUp);
+document.addEventListener('pointercancel', onUp);
+cv.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer.id) onUp(e); });
+window.addEventListener('blur', () => { release(false, 0, 0); if (state === ST.PLAY) pause(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { release(false, 0, 0); if (state === ST.PLAY) pause(); if (A.ctx) quiet(A.ctx.suspend()); }
+  else if (A.ctx && state !== ST.PAUSED) quiet(A.ctx.resume());
+});
+window.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  if (ui.settingsOpen) { if (e.key === 'Escape') closeSettings(); return; }
+  if (e.key === ' ' || e.code === 'Space') {
+    e.preventDefault();
+    if (pointer.id !== null || key.held) return;
+    audioInit();
+    if (state === ST.RESULT) { resultTap(); return; }
+    if (state === ST.PAUSED) { resume(); return; }
+    if (state === ST.DEAD) return;
+    if (state === ST.TITLE || state === ST.READY) startPlay();
+    key.held = true; touchBegin(player.x, true, null); pointer.id = null;
+  } else if (e.key === 'ArrowLeft') key.dir = -1;
+  else if (e.key === 'ArrowRight') key.dir = 1;
+  else if (e.key === 'b' || e.key === 'B') { bot = !bot; toast(bot ? '自動操縦 ON' : '自動操縦 OFF'); }
+  else if (e.key === 'g' || e.key === 'G') console.log(gen.log.join(' '));
+  else if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { if (state === ST.PLAY) pause(); else if (state === ST.PAUSED) resume(); }
+});
+window.addEventListener('keyup', e => {
+  if (e.key === ' ' || e.code === 'Space') { if (key.held) release(false, 0, 0); }
+  else if (e.key === 'ArrowLeft' && key.dir === -1) key.dir = 0;
+  else if (e.key === 'ArrowRight' && key.dir === 1) key.dir = 0;
+});
+let resizeT = 0;
+function onResize() {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => {
+    const r = cv.getBoundingClientRect();
+    if (Math.abs(Math.round(r.width) - cssW) < 2 && Math.abs(Math.round(r.height) - cssH) < 2) return; // iOS のツールバー出入りなど、大きさが変わらない通知は無視
+    layout(); if (state === ST.PLAY) pause();
+  }, 100);
+}
+window.addEventListener('resize', onResize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+
+// ================= 起動 =================
+try { document.documentElement.lang = 'ja'; } catch (e) {}
+layout();
+if (NATIVE) { notifyApply(false); statusBarDark(false); }
+toReady(); state = ST.TITLE; $('hud').classList.add('off');
+refreshTitle();
+dom.best = true;
+requestAnimationFrame(frame);
+if (!NATIVE && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/claude/.test(location.hostname) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+  window.addEventListener('load', () => { try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {} });
+}
+})();
+</script>
+</body>
+</html>
