@@ -171,6 +171,8 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
     <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v6a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-6"/></symbol>
     <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l.8 12.2a2 2 0 0 0 2 1.8h5.4a2 2 0 0 0 2-1.8L17.5 7M10 11v6M14 11v6"/></symbol>
     <symbol id="i-eye" viewBox="0 0 44 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14c5-8 12-12 20-12s15 4 20 12c-5 8-12 12-20 12S7 22 2 14z"/><circle cx="22" cy="14" r="5"/><circle cx="22" cy="14" r="1.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-contrast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18A9 9 0 0 0 12 3z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></symbol>
     <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11V4.5a1.5 1.5 0 0 1 3 0V12M14 11.5V6.5a1.5 1.5 0 0 1 3 0V13M17 12.5V9a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6h-2.2a6 6 0 0 1-5-2.7L4 13.5a1.6 1.6 0 0 1 2.6-1.9L8 13"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></symbol>
   </defs>
@@ -226,6 +228,8 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
       <div class="srow"><div class="l"><svg><use href="#i-spk"/></svg><div>音<div class="d">まぶた・通過・暗闇のハム音</div></div></div><button class="sw" id="swSound" role="switch" aria-label="音"></button></div>
       <div class="srow"><div class="l"><svg><use href="#i-vib"/></svg><div>振動<div class="d">対応端末のみ</div></div></div><button class="sw" id="swVibe" role="switch" aria-label="振動"></button></div>
       <div class="srow" id="rowNotify" hidden><div class="l"><svg><use href="#i-cal"/></svg><div>朝のお知らせ<div class="d">毎朝8時に「今日の暗転」を知らせる（アプリ版のみ）</div></div></div><button class="sw" id="swNotify" role="switch" aria-label="朝のお知らせ"></button></div>
+      <div class="srow"><div class="l"><svg><use href="#i-contrast"/></svg><div>高コントラスト<div class="d">暗闇の残像と文字を白く、はっきりと</div></div></div><button class="sw" id="swContrast" role="switch" aria-label="高コントラスト"></button></div>
+      <div class="srow"><div class="l"><svg><use href="#i-slow"/></svg><div>ゆっくり<div class="d">まぶたの動きを1.5倍ゆっくりに</div></div></div><button class="sw" id="swSlow" role="switch" aria-label="ゆっくり"></button></div>
       <div class="srow"><div class="l"><svg><use href="#i-hand"/></svg><div>感度<div class="d">指の動きに対する熾火の動き</div></div></div><div class="seg" id="segGain"><button data-g="1.2">低</button><button data-g="1.6">標準</button><button data-g="2">高</button></div></div>
       <div class="howto">白く光る点が「熾火（おきび）」＝自分。<b>触れている間</b>だけ熾火が動く。でもその間はまぶたが閉じて見えない。<br><b>離す</b>と見える。でも動けない。<br><b>閉じたまま</b>列を抜けると得点が増えていく。<br>「‹‹」の付いた<b>忍び列</b>は閉じている間だけ動く。「鏡」の列は閉じている間だけ左右が逆。隙間が2つの<b>選択列</b>は片方が遠回り。</div>
       <div class="srow"><div class="l danger"><svg><use href="#i-trash"/></svg><div>データを消す<div class="d">ベスト・累計・設定がすべて消える</div></div></div><button class="textbtn danger" id="sReset">消す</button></div>
@@ -270,7 +274,7 @@ const DEF = () => ({
   totalRows: 0, totalDarkRows: 0, totalPlays: 0, tier: 0,
   daily: { date: '', tries: 0, best: 0, bestRows: 0, bestDark: 0, ghost: null, ghostScore: 0 },
   dailyHistory: [],
-  settings: { sound: true, vibe: true, gain: 1.6, notify: false },
+  settings: { sound: true, vibe: true, gain: 1.6, notify: false, contrast: false, slow: false },
   hints: { firstTouch: 0, dark: 0, squint: 0, shinobi: 0, cancel: 0, double: 0, mirror: 0 },
 });
 let S = load();
@@ -290,7 +294,7 @@ function load() {
     if (!Array.isArray(d.dailyHistory)) d.dailyHistory = [];
     for (const k of ['best', 'bestRows', 'maxDarkStreak', 'totalRows', 'totalDarkRows', 'totalPlays']) d[k] = Math.max(0, Math.floor(Number(d[k]) || 0));
     d.tier = tierOf(d.totalRows);
-    d.settings.sound = !!d.settings.sound; d.settings.vibe = !!d.settings.vibe; d.settings.notify = !!d.settings.notify;
+    d.settings.sound = !!d.settings.sound; d.settings.vibe = !!d.settings.vibe; d.settings.notify = !!d.settings.notify; d.settings.contrast = !!d.settings.contrast; d.settings.slow = !!d.settings.slow;
     if (!d.daily || typeof d.daily !== 'object') d.daily = DEF().daily;
     for (const k of ['tries', 'best', 'bestRows', 'bestDark', 'ghostScore']) d.daily[k] = Math.max(0, Math.floor(Number(d.daily[k]) || 0));
     if (!Array.isArray(d.daily.ghost) || d.daily.ghost.length > 8000 || d.daily.ghost.some(v => typeof v !== 'number')) d.daily.ghost = null;
@@ -671,10 +675,11 @@ function eyeUpdate() {
     }
   } else if (m === 'SQUINT' && fxTime - eye.downAt >= 0.4) {
     captureAfter(PY - 90);
-    setLid(PY, PY, .12, 'SQUINT_TO_CLOSED');
+    setLid(PY, PY, .12 * lidK(), 'SQUINT_TO_CLOSED');
   }
 }
-function eyeOpenNow(dur) { if (eye.mode !== 'OPEN' && eye.mode !== 'OPENING') setLid(0, LH, dur, 'OPENING'); if (!SIM) sfx.humOn(false); }
+const lidK = () => S.settings.slow ? 1.5 : 1; // 「ゆっくり」設定ならまぶたの動きを1.5倍の時間に
+function eyeOpenNow(dur) { if (eye.mode !== 'OPEN' && eye.mode !== 'OPENING') setLid(0, LH, dur * lidK(), 'OPENING'); if (!SIM) sfx.humOn(false); }
 
 // ================= 入力 =================
 function touchBegin(lx, isMouse, id, ly) {
@@ -683,10 +688,10 @@ function touchBegin(lx, isMouse, id, ly) {
   eye.downAt = fxTime;
   if (fxTime - lastRelease >= 0.25) {
     captureAfter(FY - 10);
-    setLid(PY, PY, .08, 'CLOSING');
+    setLid(PY, PY, .08 * lidK(), 'CLOSING');
     sfx.close(); haptic(5);
   } else {
-    setLid(PY - 90, PY + 70, .08, 'SQUINT_IN');
+    setLid(PY - 90, PY + 70, .08 * lidK(), 'SQUINT_IN');
     if (S.hints.squint === 0) { S.hints.squint = 1; toast('薄目：近くだけ見える'); }
   }
 }
@@ -806,7 +811,8 @@ function showResult() {
   else { $('rProgL').textContent = '熾火は虹（最終）'; $('rProgR').textContent = `累計 ${S.totalRows} 列`; requestAnimationFrame(() => { $('rProgBar').style.width = '100%'; }); }
   const daily = mode === 'daily', done = daily && S.daily.tries >= 3;
   $('rDaily').hidden = !daily;
-  $('rDaily').innerHTML = daily ? (done ? `今日の記録 <b>${S.daily.best}</b>点 ／ 明日また` : `今日の暗転 ${S.daily.tries}/3 ｜ 今日のベスト ${S.daily.best}`) : '';
+  const wk = daily ? weekSummary(S.daily.date) : null;
+  $('rDaily').innerHTML = daily ? (done ? `今日の記録 <b>${S.daily.best}</b>点 ／ 明日また` : `今日の暗転 ${S.daily.tries}/3 ｜ 今日のベスト ${S.daily.best}`) + `<br>今週 ${wk.days}日目${wk.badge ? ` <b>${wk.badge}</b>` : ''} ｜ 週ベスト ${Math.max(wk.best, S.daily.best)}` : '';
   $('rTap').textContent = done ? 'タップでエンドレスへ' : daily ? 'タップで次の挑戦' : 'タップでもう一回';
   $('rShare').hidden = !done; $('rEndless').hidden = !daily; $('rDailyBtn').hidden = daily;
   $('result').classList.add('open');
@@ -858,9 +864,20 @@ function enterDaily() {
   toReady();
   toast(`今日の暗転 ${S.daily.tries + 1}/3 回目`);
 }
+// 今週（月曜はじまり）の日替わりの集計: 遊んだ日数と週のベスト
+function weekKey(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number); const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() - (dt.getDay() + 6) % 7); return localDateStr(dt);
+}
+function weekSummary(today = localDateStr()) {
+  const wk = weekKey(today); let days = 0, best = 0;
+  for (const h of S.dailyHistory) if (h && typeof h.date === 'string' && weekKey(h.date) === wk) { days++; if (h.best > best) best = h.best; }
+  return { days, best, badge: days >= 7 ? '皆勤' : days >= 5 ? '精勤' : days >= 3 ? '常連' : '' };
+}
 function shareText() {
   const d = S.daily.date.replace(/-/g, '/');
-  return `暗転 ${d}｜${S.daily.best}点（${S.daily.bestRows}列・暗${S.daily.bestDark}）｜段位 ${rankOf(S.best)}`;
+  const w = weekSummary(S.daily.date);
+  return `暗転 ${d}｜${S.daily.best}点（${S.daily.bestRows}列・暗${S.daily.bestDark}）｜段位 ${rankOf(S.best)}｜今週 ${w.days}日${w.badge ? '・' + w.badge : ''}`;
 }
 async function share() {
   sfx.btn();
@@ -1034,8 +1051,8 @@ function drawAfter(mul) {
   const a = (1 - t) * (1 - t) * mul;
   if (a <= 0.002) return;
   for (const r of after.rows) {
-    const sh = r.shinobi && r.drift, col = sh ? COL.amber : COL.cyan;
-    ctx.globalAlpha = a; blockPaths(r, sh ? 'rgba(255,179,107,0.35)' : 'rgba(91,232,255,0.35)', col);
+    const sh = r.shinobi && r.drift, hc = S.settings.contrast, col = sh ? COL.amber : hc ? '#FFFFFF' : COL.cyan;
+    ctx.globalAlpha = a; blockPaths(r, sh ? 'rgba(255,179,107,0.35)' : hc ? 'rgba(255,255,255,0.5)' : 'rgba(91,232,255,0.35)', col);
     gapMark(r, col);
     if (r.shinobi && r.drift) chevrons(r, col);
     if (r.mirror) mirrorMark(r, col);
@@ -1075,7 +1092,7 @@ function drawFloaters(dark) {
   for (let i = floaters.length - 1; i >= 0; i--) {
     const f = floaters[i], t = (fxTime - f.t0) / .6;
     if (t >= 1) { floaters.splice(i, 1); continue; }
-    ctx.globalAlpha = 1 - t * t; ctx.fillStyle = dark ? COL.cyan : f.dark ? '#1098B8' : COL.ink2;
+    ctx.globalAlpha = 1 - t * t; ctx.fillStyle = dark ? (S.settings.contrast ? '#FFFFFF' : COL.cyan) : f.dark ? '#1098B8' : COL.ink2;
     ctx.font = f.dark ? F16 : F14;
     ctx.fillText(f.text, f.x, f.y - 40 * easeOutCubic(t));
   }
@@ -1219,7 +1236,7 @@ function simulate({ seed = 1, n = 300, kind = 'A', log: keepLog = false } = {}) 
 }
 // 検証用: 画面が止まっていても内部時間を sec 秒ぶん進める（60fps 相当）
 function advance(sec) { let now = lastT || 0; for (let i = 0, n = Math.round(sec * 60); i < n; i++) { now += 1 / 60; tick(now); } return fxTime; }
-window.__anten = { simulate, advance, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
+window.__anten = { simulate, advance, weekSummary, get view() { return { W, LH, SC, OX, OY, PY, FY }; }, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
 
 // ================= 画面のつなぎ =================
 function refreshTitle() {
@@ -1230,6 +1247,8 @@ function refreshTitle() {
 function refreshSettings() {
   $('swSound').classList.toggle('on', S.settings.sound); $('swSound').setAttribute('aria-checked', S.settings.sound);
   $('swVibe').classList.toggle('on', S.settings.vibe); $('swVibe').setAttribute('aria-checked', S.settings.vibe);
+  $('swContrast').classList.toggle('on', S.settings.contrast); $('swContrast').setAttribute('aria-checked', S.settings.contrast);
+  $('swSlow').classList.toggle('on', S.settings.slow); $('swSlow').setAttribute('aria-checked', S.settings.slow);
   $('rowNotify').hidden = !(NATIVE && CAP.LocalNotifications);
   $('swNotify').classList.toggle('on', S.settings.notify); $('swNotify').setAttribute('aria-checked', S.settings.notify);
   for (const b of $('segGain').children) b.classList.toggle('on', Number(b.dataset.g) === S.settings.gain);
@@ -1245,6 +1264,8 @@ $('settings').addEventListener('pointerdown', e => e.stopPropagation());
 $('tSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); persist(); refreshTitle(); sfx.btn(); });
 $('swSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); refreshSettings(); sfx.btn(); });
 $('swVibe').addEventListener('click', () => { S.settings.vibe = !S.settings.vibe; refreshSettings(); sfx.btn(); haptic(8); });
+$('swContrast').addEventListener('click', () => { S.settings.contrast = !S.settings.contrast; refreshSettings(); sfx.btn(); });
+$('swSlow').addEventListener('click', () => { S.settings.slow = !S.settings.slow; refreshSettings(); sfx.btn(); });
 $('swNotify').addEventListener('click', () => { S.settings.notify = !S.settings.notify; persist(); refreshSettings(); sfx.btn(); notifyApply(true); });
 $('segGain').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.settings.gain = Number(b.dataset.g); refreshSettings(); sfx.btn(); });
 $('sReset').addEventListener('click', () => {

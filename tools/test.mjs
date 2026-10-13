@@ -152,5 +152,19 @@ console.log('[5] 今日の暗転（同じ日付は同じ配置・ゴースト）
   ok(a.api.S.daily.tries === 1 && JSON.parse(a.store.get('anten.v1')).daily.tries === 1, '挑戦の回数は始めた時点で数える (tries=' + a.api.S.daily.tries + ')');
 }
 
+console.log('[6] 設定（ゆっくり）と今週の集計');
+{
+  const { api, fireDoc } = makeApp();
+  api.S.settings.slow = true;
+  const down = (x) => fireDoc('pointerdown', { clientX: x, clientY: 600, pointerId: 1, pointerType: 'touch', button: 0, target: { closest: () => null } });
+  down(190); api.advance(0.1); const mid = api.eye.mode; api.advance(0.05); const end = api.eye.mode;
+  ok(mid === 'CLOSING' && end === 'CLOSED', '「ゆっくり」ではまぶたが 120ms かけて閉じる (0.1s: ' + mid + ' / 0.15s: ' + end + ')');
+  api.S.dailyHistory = [{ date: '2026-10-12', best: 30 }, { date: '2026-10-13', best: 57 }, { date: '2026-10-05', best: 99 }];
+  const w = api.weekSummary('2026-10-13');
+  ok(w.days === 2 && w.best === 57 && w.badge === '', '今週（月曜はじまり）の日数とベストを数える (' + JSON.stringify(w) + ')');
+  api.S.dailyHistory = [12, 13, 14, 15, 16, 17, 18].map(d => ({ date: '2026-10-' + d, best: d })); // 2026-10-12（月）〜18（日）
+  ok(api.weekSummary('2026-10-18').badge === '皆勤' && api.weekSummary('2026-10-19').days === 0, '7日そろうと皆勤。翌週の月曜には数え直す');
+}
+
 console.log(`\n${pass} OK / ${fail} NG`);
 process.exit(fail ? 1 : 0);
