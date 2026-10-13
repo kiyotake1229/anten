@@ -6,13 +6,15 @@
 
 | 項目 | 内容 |
 |---|---|
-| 状態 | **Web版 v1.0 完成（2026-10-12。レビュー修正 10-13）**。PWA 対応済み。iOS は未着手 |
+| 状態 | **Web版 v1.1 公開中（GitHub Pages）**。PWA 対応済み。**iOS プロジェクト構築済み**（GitHub Actions でビルド確認。Xcode 環境で署名して申請するだけ） |
+| 一般公開（GitHub Pages） | https://kiyotake1229.github.io/anten/ （リポジトリ https://github.com/kiyotake1229/anten 。`index.html` を push すると数十秒で反映） |
+| サポート・プライバシーポリシー | https://kiyotake1229.github.io/anten/support.html （App Store のサポート URL。ポリシーは `#privacy`） |
 | 開発確認用（Claude Artifact） | https://claude.ai/artifact/DqR5bVgq24rCGWqpfm8GVx （非公開。見るには共有設定が必要） |
-| 一般公開（GitHub Pages） | 未公開 |
-| 本体 | `index.html`（約75KB。画像・音源ファイルなし。外部ライブラリなし） |
-| 自動テスト | `node tools/test.mjs`（20件。生成の公平性・1ラウンドの流れ・保存・日替わり） |
+| iOS | Capacitor 7 → [`ios-app/`](ios-app/)。Bundle ID `work.ltv.anten`。手順は [ios-app/岩崎さんへの引き渡し手順.md](ios-app/岩崎さんへの引き渡し手順.md) |
+| 本体 | `index.html`（約85KB。画像・音源ファイルなし。外部ライブラリなし） |
+| 自動テスト | `node tools/test.mjs`（25件。生成の公平性・1ラウンドの流れ・保存・鏡の列・日替わりとゴースト） |
 | 通信 | なし（完全オフライン。外部フォントも使わない） |
-| データ | 端末内のみ（localStorage のキー `anten.v1`） |
+| データ | 端末内のみ（localStorage のキー `anten.v1`。iOS 版も同じ） |
 | 対応 | スマホ縦持ち（iPhone Safari / Android Chrome）。PC はマウスかキーボード（Space + ←→） |
 
 ---
@@ -29,28 +31,40 @@
 
 - **据え列と移り列**: 前の隙間とほぼ同じ位置の列（動かなくていい）と、動かないと抜けられない列。移り列は2本までしか続かない。3本目は必ず据え列
 - **忍び列**: 山形の印「‹‹」「››」が付いた列は、**目を閉じている間だけ**横に動く。残像は琥珀色になる（信用しない）
+- **鏡の列**（v1.1）: 「鏡」の印の列が次に来る間は、**閉じている間だけ左右が逆**。3本で1組（40列目以降）
+- **選択列**（v1.1）: 隙間が2つ。どちらも通れるが、片方は次の列の隙間から遠く、間に合わないことが多い（30列目以降）
 - **薄目**: 離してすぐ（0.25秒以内）にもう一度触ると、自機の近くだけ見える「薄目」になる。動けるが、暗列にはならない
 - **残像**: 閉じた瞬間に見えていた列が青白く残り、1秒ほどで消える
 
 ## 主な機能
 
-- エンドレス（ベストを更新していく）と **今日の暗転**（日付で決まる同じ配置。1日3回。記録を共有できる）
+- エンドレス（ベストを更新していく）と **今日の暗転**（日付で決まる同じ配置。1日3回。2回目からはその日のベストの軌跡＝ゴーストが一緒に走る。記録を共有できる）
 - 段位（自己ベストで決まる）: 見習い / 手探り / 夜目 / 暗中 / 心眼 / 無明
 - 熾火の色（累計の列数で解放）: 白 → 蒼（100列）→ 金（400）→ 紅（1,200）→ 虹（3,000）
 - 音はすべて WebAudio で合成（まぶた・通過・暗闇のハム音・忍び列の擦れる音・ヒヤリ・死亡）。設定で ON/OFF
 - 振動（対応端末のみ）、感度の切り替え（低 / 標準 / 高）、一時停止、データの消去
 - 画面の回転・アプリ復帰・保存できない環境でも止まらない
+- iOS 版のみ: 本物の触覚フィードバック、毎朝8時の「今日の暗転」のお知らせ（設定で ON/OFF）、閉眼中はステータスバーも暗く
+
+## 岩崎さんへ
+
+App Store への申請手順は **[ios-app/岩崎さんへの引き渡し手順.md](ios-app/岩崎さんへの引き渡し手順.md)** にまとめてあります。
+申請時に入力する文面（説明文・キーワード・審査メモ）も用意済みです。Xcode 26 で署名してアップロードするだけの状態です。
 
 ## ファイル構成
 
 ```
 新感覚/
   index.html              アプリ本体（HTML・CSS・JavaScript を1ファイルに）
+  support.html            サポート・プライバシーポリシー（App Store のサポート URL）
   manifest.json / sw.js   PWA 用（ホーム画面に追加、通信なしで起動）
   icon.svg                アイコンの元データ（半分閉じた目）
   icon-192.png / icon-512.png / icon-512-maskable.png / apple-touch-icon.png
-  tools/make-icons.sh     icon.svg から PNG 一式を作り直す（要 Node.js）
+  tools/make-icons.sh     icon.svg から PNG 一式と iOS 用の元画像を作り直す（要 Node.js）
   tools/test.mjs          自動テスト（node tools/test.mjs）
+  ios-app/                iOS プロジェクト（Capacitor 7）。岩崎さんへの引き渡し手順.md
+                          node_modules/ と www/ は Dropbox を軽くするため消してある（npm install / npm run sync で作り直す）
+  .github/workflows/ios-build.yml  push ごとに署名なしの iOS ビルドを確認する
   docs/                   開発ドキュメント（命名規則は docs/README.md）
   .claude/launch.json     ローカル確認用サーバ（http://127.0.0.1:8795/）
 ```
@@ -62,6 +76,7 @@
 - キーボード（開発用）: `Space` 押しっぱなし = 触っている / `←` `→` = 移動 / `B` = 自動操縦 / `G` = 列の生成ログ / `P` = 一時停止
 - コンソール API: `__anten.simulate({seed, n, kind:'A'|'B'})`（画面なしで n 列ぶん進める）、`__anten.advance(秒)`（内部時間を進める）
 - Claude がブラウザで確認するときは、先にミュート用スクリプトを流す（`_テンプレート/動作チェックのミュート手順.md`）
+- git で管理している（`kiyotake1229/anten`）。文書を書いて `generate_docs_json.sh` を実行してから `[#連番] 内容` でコミットし、push する
 
 ## 開発ドキュメント
 
@@ -69,10 +84,13 @@
 
 - 現状の仕様と構成（最初の1本）: `docs/20261012_DOC_0001_ALL_現状の仕様と構成.md`
 - 公開前レビューの修正（性能・デザイン・論理・タッチ・Artifact・音）: `docs/20261013_ENH_0002_ALL_公開前レビューの指摘を修正.md`
+- v1.1 の追加（選択列・鏡の列・ゴースト・ネイティブ連携）: `docs/20261013_NEW_0003_GAME_選択列・鏡の列・ゴーストとネイティブ連携.md`
+- GitHub Pages での公開: `docs/20261013_DPL_0004_PWA_GitHub_Pagesで一般公開.md`
+- iOS プロジェクトと引き渡し: `docs/20261013_NEW_0005_IOS_iOSプロジェクトの構築と引き渡し.md`
 - 機能追加・バグ修正・改善をしたら、1件ごとに文書を足して `bash docs/manager/generate_docs_json.sh` を実行する
 
 ## 残作業
 
-- GitHub Pages での一般公開（サポートURL 用）と `support.html`
-- iOS アプリ化（`habit/ios-app/` を雛形に Capacitor。`haptic()` を Haptics に差し替え、「今日の暗転」の通知）
-- 拡張案: 隙間が2つの列、閉眼中だけ左右が反転する「鏡の列」、自己ベストのゴースト、週替わりの集計
+- 実機（iPhone / Android）での確認: 最初のタッチで音が鳴るか、閉眼が真っ暗になるか、iOS 版の通知と触覚
+- App Store 申請（岩崎さん）: 署名・アップロード・スクリーンショット
+- 拡張案: 週替わりの集計（`dailyHistory` から段位バッジ）、高コントラスト設定（残像を白に）、「ゆっくり」設定（まぶたの速度 1.5 倍遅く）
