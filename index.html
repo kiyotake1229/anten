@@ -99,8 +99,9 @@ body.dark #score.gold,body.dark #best.gold{color:var(--gold)}
 .prog .bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--ink);transition:width .8s var(--ease)}
 #rTap{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:.12em;padding:6px 0;animation:pulse 2.2s ease-in-out infinite}
 #rDaily{font-size:12px;color:var(--ink2);text-align:center;line-height:1.7}
-#result .row{gap:18px}
-#result .row .icon-btn{width:44px;height:44px}
+#result .row{gap:14px;margin-bottom:12px}
+#result .row .icon-btn{width:48px;height:44px}
+#result .row .icon-btn .lbl{top:calc(100% - 2px)}
 .textbtn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;white-space:nowrap;border-radius:14px;border:1px solid var(--paper2);font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.06em;pointer-events:auto;transition:background .25s,transform .2s var(--ease)}
 .textbtn svg{width:20px;height:20px}
 .textbtn:active{transform:scale(.95)}
@@ -147,6 +148,11 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
 @keyframes tin{from{opacity:0;transform:translateY(-8px) scale(.96)}}
 @keyframes tout{to{opacity:0;transform:translateY(-6px) scale(.97)}}
 
+#shareSheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;padding:14px 22px calc(var(--sb) + 18px);background:var(--paper);border:1px solid var(--paper2);border-bottom:0;border-radius:24px 24px 0 0;transform:translateY(105%);visibility:hidden;transition:transform .4s var(--ease),visibility 0s .4s;z-index:7;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+#shareSheet.open{transform:none;visibility:visible;transition:transform .4s var(--ease)}
+#shareSheet img{width:min(62%,240px);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#shareSheet .note{font-size:12px;color:var(--ink2);text-align:center;line-height:1.7}
+#shareSheet .row{gap:12px;margin:0}
 #shareBox{position:fixed;left:16px;right:16px;bottom:calc(var(--sb) + 120px);z-index:9;pointer-events:auto}
 #shareBox textarea{width:100%;height:60px;border-radius:12px;border:1px solid var(--paper2);padding:10px;font:inherit;font-size:13px;color:var(--ink);background:#fff;resize:none;-webkit-user-select:text;user-select:text}
 
@@ -174,6 +180,7 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
     <symbol id="i-contrast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18A9 9 0 0 0 12 3z" fill="currentColor" stroke="none"/></symbol>
     <symbol id="i-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></symbol>
     <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11V4.5a1.5 1.5 0 0 1 3 0V12M14 11.5V6.5a1.5 1.5 0 0 1 3 0V13M17 12.5V9a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6h-2.2a6 6 0 0 1-5-2.7L4 13.5a1.6 1.6 0 0 1 2.6-1.9L8 13"/></symbol>
+    <symbol id="i-inf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-1.6-2.4-3-3.6-5-3.6a3.6 3.6 0 0 0 0 7.2c2 0 3.4-1.2 5-3.6s3-3.6 5-3.6a3.6 3.6 0 0 1 0 7.2c-2 0-3.4-1.2-5-3.6z"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></symbol>
   </defs>
 </svg>
@@ -211,10 +218,11 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
     <div id="rDaily" hidden></div>
     <div id="rTap">タップでもう一回</div>
     <div class="row">
-      <button class="icon-btn" id="rSettings" aria-label="設定"><svg><use href="#i-gear"/></svg></button>
-      <button class="icon-btn" id="rDailyBtn" aria-label="今日の暗転"><svg><use href="#i-cal"/></svg></button>
-      <button class="textbtn" id="rShare" hidden><svg><use href="#i-share"/></svg>共有</button>
-      <button class="textbtn" id="rEndless" hidden>エンドレスへ</button>
+      <button class="icon-btn" id="rSettings" aria-label="設定"><svg><use href="#i-gear"/></svg><span class="lbl">設定</span></button>
+      <button class="icon-btn" id="rDailyBtn" aria-label="今日の暗転"><svg><use href="#i-cal"/></svg><span class="lbl">今日の暗転</span></button>
+      <button class="icon-btn" id="rShare" aria-label="称号を共有"><svg><use href="#i-share"/></svg><span class="lbl">称号を共有</span></button>
+      <button class="icon-btn" id="rBest" aria-label="ベストに挑む" hidden><svg><use href="#i-play"/></svg><span class="lbl">ベストに挑む</span></button>
+      <button class="icon-btn" id="rEndless" aria-label="エンドレスへ" hidden><svg><use href="#i-inf"/></svg><span class="lbl">エンドレスへ</span></button>
     </div>
   </div>
 
@@ -233,11 +241,17 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
       <div class="srow"><div class="l"><svg><use href="#i-hand"/></svg><div>感度<div class="d">指の動きに対する熾火の動き</div></div></div><div class="seg" id="segGain"><button data-g="1.2">低</button><button data-g="1.6">標準</button><button data-g="2">高</button></div></div>
       <div class="howto">白く光る点が「熾火（おきび）」＝自分。<b>触れている間</b>だけ熾火が動く。でもその間はまぶたが閉じて見えない。<br><b>離す</b>と見える。でも動けない。<br><b>閉じたまま</b>列を抜けると得点が増えていく。<br>「‹‹」の付いた<b>忍び列</b>は閉じている間だけ動く。「鏡」の列は閉じている間だけ左右が逆。隙間が2つの<b>選択列</b>は片方が遠回り。</div>
       <div class="srow"><div class="l danger"><svg><use href="#i-trash"/></svg><div>データを消す<div class="d">ベスト・累計・設定がすべて消える</div></div></div><button class="textbtn danger" id="sReset">消す</button></div>
-      <div class="ver">暗転 v1.1</div>
+      <div class="ver">暗転 v1.2</div>
     </div>
   </div>
 
   <div id="toasts"></div>
+  <div id="shareSheet" role="dialog" aria-label="称号を共有">
+    <div class="grip"></div>
+    <img id="shareImg" alt="称号の画像">
+    <div class="note" id="shareNote">画像を長押しすると保存できる。<br>SNS に貼るときは、下の文面もどうぞ</div>
+    <div class="row"><button class="textbtn" id="shareCopy">文面をコピー</button><button class="textbtn" id="shareClose">閉じる</button></div>
+  </div>
   <div id="shareBox" hidden><textarea id="shareText" readonly></textarea></div>
 </div>
 
@@ -265,12 +279,12 @@ const RANKS = [[0, '見習い'], [20, '手探り'], [50, '夜目'], [100, '暗�
 const EMBERS = [{ at: 0, name: '白', col: '#FFFFFF' }, { at: 100, name: '蒼', col: '#7CC4FF' }, { at: 400, name: '金', col: '#FFD36B' }, { at: 1200, name: '紅', col: '#FF6B6B' }, { at: 3000, name: '虹', col: null }];
 const OPEN_NOTES = [440, 494, 554, 659, 784];
 const ST = { TITLE: 0, READY: 1, PLAY: 2, DEAD: 3, RESULT: 4, PAUSED: 5 };
-const VERSION = '1.1';
+const VERSION = '1.2';
 
 // ================= 保存 =================
 const KEY = 'anten.v1';
 const DEF = () => ({
-  v: 1, best: 0, bestRows: 0, bestDate: '', maxDarkStreak: 0,
+  v: 1, best: 0, bestRows: 0, bestDate: '', bestDark: 0, bestSeed: 0, bestGhost: null, maxDarkStreak: 0,
   totalRows: 0, totalDarkRows: 0, totalPlays: 0, tier: 0,
   daily: { date: '', tries: 0, best: 0, bestRows: 0, bestDark: 0, ghost: null, ghostScore: 0 },
   dailyHistory: [],
@@ -298,6 +312,8 @@ function load() {
     if (!d.daily || typeof d.daily !== 'object') d.daily = DEF().daily;
     for (const k of ['tries', 'best', 'bestRows', 'bestDark', 'ghostScore']) d.daily[k] = Math.max(0, Math.floor(Number(d.daily[k]) || 0));
     if (!Array.isArray(d.daily.ghost) || d.daily.ghost.length > 8000 || d.daily.ghost.some(v => typeof v !== 'number')) d.daily.ghost = null;
+    if (!Array.isArray(d.bestGhost) || d.bestGhost.length > 8000 || d.bestGhost.some(v => typeof v !== 'number')) d.bestGhost = null;
+    d.bestSeed = Math.floor(Number(d.bestSeed) || 0) >>> 0; d.bestDark = Math.max(0, Math.floor(Number(d.bestDark) || 0));
     return d;
   } catch (e) { return DEF(); }
 }
@@ -452,7 +468,7 @@ function statusBarDark(dark) { if (NATIVE && CAP.StatusBar) quiet(CAP.StatusBar.
 // ================= ゲームの状態 =================
 let SIM = false;              // 自動検証（画面・音なし）で動かしているとき true
 let state = ST.TITLE, mode = 'endless';
-const G = { score: 0, passed: 0, streak: 0, maxStreak: 0, darkRows: 0, v: 140, prevPassTime: -1, cancels: 0, round: 0, steps: 0, trace: [], ghostBeaten: false };
+const G = { score: 0, passed: 0, streak: 0, maxStreak: 0, darkRows: 0, v: 140, prevPassTime: -1, cancels: 0, round: 0, steps: 0, trace: [], ghostBeaten: false, seed: 0 };
 const rows = [];              // 先頭が自機にいちばん近い（下）、末尾がいちばん新しい（上）
 let rowSeq = 0;
 const player = { x: 180, tx: 180, trail: [] };
@@ -619,7 +635,7 @@ function step() {
   while (rows.length && rows[0].y > LH + 20) rowPool.push(rows.shift());
   spawnIfNeeded();
   gameTime += DT; G.steps++;
-  if (mode === 'daily' && !SIM && (G.steps & 3) === 0 && G.trace.length < 8000) G.trace.push(Math.round(player.x)); // ゴースト用（30回/秒）
+  if (!SIM && (G.steps & 3) === 0 && G.trace.length < 8000) G.trace.push(Math.round(player.x)); // ゴースト用（30回/秒）。ベストの軌跡として残す
 }
 
 // ================= 得点 =================
@@ -642,6 +658,7 @@ function onPass(r) {
   if (!SIM) {
     dom.score = true;
     if (mode === 'daily' && S.daily.ghost && !G.ghostBeaten && G.score > S.daily.ghostScore) { G.ghostBeaten = true; toast('今日のベストを超えた'); }
+    if (mode === 'best' && !G.ghostBeaten && G.score > S.best) { G.ghostBeaten = true; toast('ベストを超えた'); }
     if (dom.bestHit) dom.best = true;
     if (G.score > S.best && !dom.bestHit) { dom.bestHit = true; dom.best = true; if (S.best > 0) { floater(180, PY - 60, 'ベスト更新', true); for (let i = 0; i < 12; i++) spark(player.x, PY, COL.gold, .6, 160, -1); } }
     if (r.minGap <= 6 && r.minGap > -1e8) {
@@ -753,7 +770,10 @@ function toReady() {
   killer = null; deadPoint = null; cracks.length = 0; particles.length = 0; floaters.length = 0; unlockFx = null; shinOn = false;
   after.rows.length = 0; eye.mode = 'OPEN'; eye.top = 0; eye.bot = LH; eye.closedSince = -1;
   dom.bestHit = false; dom.score = dom.best = dom.mode = true;
-  if (mode === 'daily') { checkDailyDate(); resetRows(dailySeed(S.daily.date)); } else resetRows(newSeed());
+  if (mode === 'daily') { checkDailyDate(); G.seed = dailySeed(S.daily.date); }
+  else if (mode === 'best' && S.bestGhost) G.seed = S.bestSeed;   // ベストと同じ配置
+  else { mode = 'endless'; G.seed = newSeed(); }
+  resetRows(G.seed);
   if (SIM) return;
   $('hud').classList.remove('off');
   $('result').classList.remove('open');
@@ -790,7 +810,7 @@ function die(r) {
 function showResult() {
   state = ST.RESULT; resultAt = fxTime;
   const isBest = G.score > S.best, prevTier = S.tier;
-  if (isBest) { S.best = G.score; S.bestRows = G.passed; S.bestDate = localDateStr(); }
+  if (isBest) { S.best = G.score; S.bestRows = G.passed; S.bestDark = G.darkRows; S.bestDate = localDateStr(); S.bestSeed = G.seed; S.bestGhost = G.trace.slice(); }
   if (G.maxStreak > S.maxDarkStreak) S.maxDarkStreak = G.maxStreak;
   S.totalRows += G.passed; S.totalDarkRows += G.darkRows;
   S.tier = tierOf(S.totalRows);
@@ -809,17 +829,25 @@ function showResult() {
   $('rProgBar').style.width = '0%';
   if (next) { $('rProgL').textContent = `${next.name}の熾火まで`; $('rProgR').textContent = `${S.totalRows} / ${next.at} 列`; requestAnimationFrame(() => { $('rProgBar').style.width = `${clamp(S.totalRows / next.at * 100, 0, 100)}%`; }); }
   else { $('rProgL').textContent = '熾火は虹（最終）'; $('rProgR').textContent = `累計 ${S.totalRows} 列`; requestAnimationFrame(() => { $('rProgBar').style.width = '100%'; }); }
-  const daily = mode === 'daily', done = daily && S.daily.tries >= 3;
+  const daily = mode === 'daily', best = mode === 'best', done = daily && S.daily.tries >= 3;
   $('rDaily').hidden = !daily;
   const wk = daily ? weekSummary(S.daily.date) : null;
   $('rDaily').innerHTML = daily ? (done ? `今日の記録 <b>${S.daily.best}</b>点 ／ 明日また` : `今日の暗転 ${S.daily.tries}/3 ｜ 今日のベスト ${S.daily.best}`) + `<br>今週 ${wk.days}日目${wk.badge ? ` <b>${wk.badge}</b>` : ''} ｜ 週ベスト ${Math.max(wk.best, S.daily.best)}` : '';
-  $('rTap').textContent = done ? 'タップでエンドレスへ' : daily ? 'タップで次の挑戦' : 'タップでもう一回';
-  $('rShare').hidden = !done; $('rEndless').hidden = !daily; $('rDailyBtn').hidden = daily;
+  $('rTap').textContent = done ? 'タップでエンドレスへ' : daily ? 'タップで次の挑戦' : best ? 'タップでもう一回（同じ配置）' : 'タップでもう一回';
+  resultButtons();
   $('result').classList.add('open');
   if (isBest && G.score > 0) haptic([20, 40, 20]);
   sfx.result(isBest && G.score > 0);
   if (S.tier > prevTier) later(.4, () => { if (state !== ST.RESULT) return; unlockFx = { t0: fxTime, from: EMBERS[prevTier].col || '#fff', to: EMBERS[S.tier].col || '#fff' }; toast(`熾火が${EMBERS[S.tier].name}になった`); sfx.unlock(); haptic([10, 30, 10, 30, 30]); });
   if (bot) later(.3, () => { if (state === ST.RESULT) { resultTap(); later(.2, () => { if (state === ST.READY) startPlay(); }); } });
+}
+// リザルトの下のボタン: モードごとに出し分ける
+function resultButtons() {
+  const daily = mode === 'daily', best = mode === 'best', done = daily && S.daily.tries >= 3;
+  $('rDailyBtn').hidden = daily || best;
+  $('rShare').hidden = daily && !done;
+  $('rBest').hidden = !(mode === 'endless' && S.bestGhost && S.best > 0);
+  $('rEndless').hidden = !(daily || best);
 }
 function resultTap() {
   if (fxTime - resultAt < .4) return; // 出た直後の連打で結果を見逃さないように
@@ -855,7 +883,7 @@ function enterDaily() {
     $('rRows').textContent = S.daily.bestRows; $('rDark').textContent = S.daily.bestDark; $('rStreak').textContent = '-';
     $('rDaily').hidden = false; $('rDaily').innerHTML = `今日の記録 <b>${S.daily.best}</b>点 ／ 明日また`;
     $('rTap').textContent = 'タップでエンドレスへ';
-    $('rShare').hidden = false; $('rEndless').hidden = false; $('rDailyBtn').hidden = true;
+    resultButtons();
     $('rProgL').textContent = '今日の暗転'; $('rProgR').textContent = '3/3 回'; $('rProgBar').style.width = '100%';
     $('result').classList.add('open');
     return;
@@ -879,9 +907,77 @@ function shareText() {
   const w = weekSummary(S.daily.date);
   return `暗転 ${d}｜${S.daily.best}点（${S.daily.bestRows}列・暗${S.daily.bestDark}）｜段位 ${rankOf(S.best)}｜今週 ${w.days}日${w.badge ? '・' + w.badge : ''}`;
 }
-async function share() {
+// 称号の画像（1080×1350）。段位・得点・列数を、暗闇と残像の絵柄で1枚にする
+function makeShareImage(info) {
+  const Wi = 1080, Hi = 1350, c = document.createElement('canvas'); c.width = Wi; c.height = Hi;
+  const g = c.getContext('2d');
+  g.fillStyle = COL.dark; g.fillRect(0, 0, Wi, Hi);
+  const vg = g.createRadialGradient(Wi / 2, 700, 0, Wi / 2, 700, 900); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.35)');
+  // 残像の列（シアン）
+  const rows = [[300, 380, 120], [450, 640, 110], [600, 460, 100]];
+  for (const [y, gx, gw] of rows) {
+    g.globalAlpha = .28; g.fillStyle = 'rgba(91,232,255,0.35)'; g.strokeStyle = COL.cyan; g.lineWidth = 4;
+    for (const [x0, x1] of [[-20, gx - gw / 2], [gx + gw / 2, Wi + 20]]) { g.beginPath(); g.roundRect ? g.roundRect(x0, y - 33, x1 - x0, 66, 9) : g.rect(x0, y - 33, x1 - x0, 66); g.fill(); g.stroke(); }
+    g.globalAlpha = 1;
+  }
+  g.fillStyle = vg; g.fillRect(0, 0, Wi, Hi);
+  // まぶたの縁
+  g.strokeStyle = COL.darkEdge; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(-10, 230); g.quadraticCurveTo(Wi / 2, 300, Wi + 10, 230); g.stroke();
+  g.beginPath(); g.moveTo(-10, 1190); g.quadraticCurveTo(Wi / 2, 1120, Wi + 10, 1190); g.stroke();
+  // 熾火
+  const col = EMBERS[S.tier].col || COL.cyan;
+  const eg = g.createRadialGradient(Wi / 2, 760, 0, Wi / 2, 760, 230); eg.addColorStop(0, 'rgba(255,255,255,.95)'); eg.addColorStop(.25, col); eg.addColorStop(1, 'rgba(255,255,255,0)');
+  g.globalAlpha = .55; g.fillStyle = eg; g.beginPath(); g.arc(Wi / 2, 760, 230, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = COL.paper; g.font = '800 64px ' + FONT; g.fillText('暗転', Wi / 2, 118);
+  g.fillStyle = COL.cyan; g.font = '600 34px ' + FONT; g.fillText('触ると動ける。でも見えない', Wi / 2, 182);
+  g.fillStyle = COL.cyan; g.font = '700 38px ' + FONT; g.fillText(info.label, Wi / 2, 520);
+  g.fillStyle = COL.paper; g.font = '800 210px ' + FONT; g.fillText(info.rank, Wi / 2, 690);
+  g.fillStyle = COL.paper; g.font = '800 128px ' + FONT; g.fillText(String(info.score), Wi / 2 - 30, 900);
+  g.fillStyle = COL.ink3; g.font = '700 44px ' + FONT; g.fillText('点', Wi / 2 + 120, 930);
+  g.fillStyle = COL.ink3; g.font = '600 40px ' + FONT; g.fillText(`${info.rows}列 ・ 暗列 ${info.dark} ・ 最長連続暗 ${info.streak}`, Wi / 2, 1010);
+  g.fillStyle = COL.ink3; g.font = '600 36px ' + FONT; g.fillText(info.date, Wi / 2, 1075);
+  g.fillStyle = COL.ink3; g.font = '600 34px ' + FONT; g.fillText('kiyotake1229.github.io/anten', Wi / 2, 1270);
+  return c;
+}
+function shareInfo() {
+  const daily = mode === 'daily', d = localDateStr().replace(/-/g, '/');
+  if (daily) return { label: `今日の暗転 ${S.daily.date.replace(/-/g, '/')}`, rank: rankOf(S.best), score: S.daily.best, rows: S.daily.bestRows, dark: S.daily.bestDark, streak: G.maxStreak, date: d, text: shareText() };
+  return { label: '段位', rank: rankOf(S.best), score: G.score, rows: G.passed, dark: G.darkRows, streak: G.maxStreak, date: d,
+    text: `暗転｜${G.score}点（${G.passed}列・暗${G.darkRows}）｜段位 ${rankOf(S.best)}${G.score >= S.best && G.score > 0 ? '（ベスト）' : ''} https://kiyotake1229.github.io/anten/` };
+}
+let shareDataUrl = '';
+function openShareSheet(dataUrl, text) {
+  shareDataUrl = dataUrl; $('shareImg').src = dataUrl; $('shareCopy').dataset.text = text;
+  $('shareSheet').classList.add('open'); $('scrim').classList.add('open'); ui.settingsOpen = true; // 設定と同じく、開いている間はゲームの入力を受けない
+}
+function closeShareSheet() { $('shareSheet').classList.remove('open'); if (!$('settings').classList.contains('open')) { $('scrim').classList.remove('open'); ui.settingsOpen = false; } }
+async function shareRank() {
   sfx.btn();
-  const text = shareText();
+  const info = shareInfo(), text = info.text;
+  let c; try { c = makeShareImage(info); } catch (e) { c = null; }
+  // iOS アプリ: 画像を一時フォルダに書いて共有シートへ
+  if (c && NATIVE && CAP.Share && CAP.Filesystem) {
+    try {
+      const data = c.toDataURL('image/png').split(',')[1];
+      const f = await CAP.Filesystem.writeFile({ path: 'anten-share.png', data, directory: 'CACHE' });
+      await CAP.Share.share({ text, files: [f.uri] }); return;
+    } catch (e) { if (e && /cancel/i.test(String(e.message || e))) return; }
+  }
+  // ブラウザ: 画像つきで共有できればそれで。できなければ画像を見せて長押し保存
+  if (c && navigator.share && navigator.canShare && window.File) {
+    try {
+      const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+      if (blob) { const file = new File([blob], 'anten.png', { type: 'image/png' }); if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; } }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  if (c) { try { openShareSheet(c.toDataURL('image/png'), text); return; } catch (e) {} }
+  share(text);
+}
+async function share(textArg) {
+  sfx.btn();
+  const text = textArg || shareText();
   try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); toast('コピーした'); return; } } catch (e) {}
   const box = $('shareBox'), ta = $('shareText');
@@ -931,11 +1027,17 @@ function mirrorMark(r, col) {
   ctx.fillStyle = col; ctx.font = F11B; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('鏡', r.gapX, r.y); if (r.gap2X >= 0) ctx.fillText('鏡', r.gap2X, r.y);
 }
+function ghostData() {
+  if (mode === 'daily') return S.daily.ghost ? S.daily.ghost : null;
+  if (mode === 'best') return S.bestGhost ? S.bestGhost : null;
+  return null;
+}
 function drawGhost(dark) {
-  if (mode !== 'daily' || !S.daily.ghost || (state !== ST.PLAY && state !== ST.DEAD)) return;
+  const gd = ghostData();
+  if (!gd || (state !== ST.PLAY && state !== ST.DEAD)) return;
   const i = Math.floor(gameTime * 30);
-  if (i >= S.daily.ghost.length) return;
-  const gx = S.daily.ghost[i];
+  if (i >= gd.length) return;
+  const gx = gd[i];
   ctx.globalAlpha = dark ? .35 : .55; ctx.strokeStyle = dark ? COL.cyan : COL.ink3; ctx.lineWidth = 1.2;
   ctx.beginPath(); ctx.arc(gx, PY, 8, 0, Math.PI * 2); ctx.stroke();
   ctx.fillStyle = dark ? COL.cyan : COL.ink3; ctx.font = F11; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('ベスト', gx, PY + 20);
@@ -1165,7 +1267,7 @@ function updateFx(dt) {
 function updateDom() {
   if (dom.score) { dom.score = false; const el = $('score'); el.textContent = G.score; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); el.classList.toggle('gold', dom.bestHit && S.best > 0 && G.score > S.best); }
   if (dom.best) { dom.best = false; const b = Math.max(S.best, dom.bestHit ? G.score : 0); $('best').textContent = `ベスト ${b}`; $('best').classList.toggle('gold', dom.bestHit && S.best > 0); }
-  if (dom.mode) { dom.mode = false; $('mode').textContent = mode === 'daily' ? `今日 ${Math.min(state === ST.READY ? S.daily.tries + 1 : S.daily.tries, 3)}/3` : ''; }
+  if (dom.mode) { dom.mode = false; $('mode').textContent = mode === 'daily' ? `今日 ${Math.min(state === ST.READY ? S.daily.tries + 1 : S.daily.tries, 3)}/3` : mode === 'best' ? `ベストに挑戦 ${S.best}` : ''; }
 }
 let lastT = 0, acc = 0;
 function frame(ts) { requestAnimationFrame(frame); tick(ts / 1000); }
@@ -1236,7 +1338,7 @@ function simulate({ seed = 1, n = 300, kind = 'A', log: keepLog = false } = {}) 
 }
 // 検証用: 画面が止まっていても内部時間を sec 秒ぶん進める（60fps 相当）
 function advance(sec) { let now = lastT || 0; for (let i = 0, n = Math.round(sec * 60); i < n; i++) { now += 1 / 60; tick(now); } return fxTime; }
-window.__anten = { simulate, advance, weekSummary, get view() { return { W, LH, SC, OX, OY, PY, FY }; }, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
+window.__anten = { simulate, advance, weekSummary, makeShareImage, shareInfo, get mode() { return mode; }, set mode(m) { mode = m; }, get view() { return { W, LH, SC, OX, OY, PY, FY }; }, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
 
 // ================= 画面のつなぎ =================
 function refreshTitle() {
@@ -1259,7 +1361,7 @@ function closeSettings() { ui.settingsOpen = false; $('settings').classList.remo
 $('tSettings').addEventListener('click', openSettings);
 $('rSettings').addEventListener('click', openSettings);
 $('sClose').addEventListener('click', () => { sfx.btn(); closeSettings(); });
-$('scrim').addEventListener('click', closeSettings);
+$('scrim').addEventListener('click', () => { if ($('shareSheet').classList.contains('open')) closeShareSheet(); else closeSettings(); });
 $('settings').addEventListener('pointerdown', e => e.stopPropagation());
 $('tSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); persist(); refreshTitle(); sfx.btn(); });
 $('swSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); refreshSettings(); sfx.btn(); });
@@ -1276,8 +1378,12 @@ $('sReset').addEventListener('click', () => {
 });
 $('tDaily').addEventListener('click', enterDaily);
 $('rDailyBtn').addEventListener('click', () => { $('result').classList.remove('open'); enterDaily(); });
-$('rShare').addEventListener('click', share);
+$('rShare').addEventListener('click', shareRank);
+$('rBest').addEventListener('click', () => { sfx.btn(); mode = 'best'; toReady(); toast(`ベスト ${S.best} の配置。輪がそのときの軌跡`); });
 $('rEndless').addEventListener('click', () => { sfx.btn(); mode = 'endless'; toReady(); });
+$('shareSheet').addEventListener('pointerdown', e => e.stopPropagation());
+$('shareClose').addEventListener('click', () => { sfx.btn(); closeShareSheet(); });
+$('shareCopy').addEventListener('click', async () => { sfx.btn(); const t = $('shareCopy').dataset.text || ''; try { await navigator.clipboard.writeText(t); toast('コピーした'); } catch (e) { const ta = $('shareText'); ta.value = t; $('shareBox').hidden = false; ta.focus(); ta.select(); later(6, () => { $('shareBox').hidden = true; }); } });
 $('pauseBtn').addEventListener('click', () => { sfx.btn(); if (state === ST.PLAY) pause(); else if (state === ST.PAUSED) resume(); });
 $('pause').addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); resume(); });
 $('result').addEventListener('pointerdown', e => { if (isUiTarget(e.target) || state !== ST.RESULT) return; e.stopPropagation(); e.preventDefault(); resultTap(); });
@@ -1295,7 +1401,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('keydown', e => {
   if (e.repeat) return;
-  if (ui.settingsOpen) { if (e.key === 'Escape') closeSettings(); return; }
+  if (ui.settingsOpen) { if (e.key === 'Escape') { if ($('shareSheet').classList.contains('open')) closeShareSheet(); else closeSettings(); } return; }
   if (e.key === ' ' || e.code === 'Space') {
     e.preventDefault();
     if (pointer.id !== null || key.held) return;

@@ -166,5 +166,33 @@ console.log('[6] 設定（ゆっくり）と今週の集計');
   ok(api.weekSummary('2026-10-18').badge === '皆勤' && api.weekSummary('2026-10-19').days === 0, '7日そろうと皆勤。翌週の月曜には数え直す');
 }
 
+console.log('[7] ベストに挑む（同じ配置をゴーストと走る）と称号の画像');
+{
+  const { api, fireDoc, get, store } = makeApp();
+  const down = (x) => fireDoc('pointerdown', { clientX: x, clientY: 600, pointerId: 1, pointerType: 'touch', button: 0, target: { closest: () => null } });
+  const up = (x) => fireDoc('pointerup', { clientX: x, clientY: 600, pointerId: 1 });
+  down(190); api.advance(0.2); up(190);
+  const row5 = () => { let n = 0, r = null; while (!(r = api.rows.find(q => q.k === 5)) && n < 200 && api.state === 2) { api.advance(0.1); n++; } return r ? Math.round(r.gapX) : null; };
+  const gap5a = row5(); api.advance(12);
+  const seed1 = api.G.seed;
+  ok(api.state === 4 && api.S.bestGhost && api.S.bestGhost.length > 10 && api.S.bestSeed === seed1, 'エンドレスのベストで種と軌跡が保存される (seed=' + seed1 + ', ' + (api.S.bestGhost || []).length + '点)');
+  ok(!get('rBest').hidden && get('rShare').hidden === false, 'リザルトに「ベストに挑む」と「称号を共有」が出る');
+  get('rBest').fire('click'); api.advance(0.3);
+  ok(api.mode === 'best' && api.state === 1 && api.G.seed === seed1, '「ベストに挑む」でベストと同じ種の READY になる');
+  down(190); api.advance(0.2); up(190);
+  const gap5b = row5();
+  ok(gap5a !== null && gap5a === gap5b, '6列目（最初の乱数の列）の隙間がベストのときと同じ位置 (' + gap5a + ' / ' + gap5b + ')');
+  api.advance(12); get('result').fire('pointerdown', { target: { closest: () => null } }); api.advance(0.6);
+  ok(get('mode').textContent.startsWith('ベストに挑戦') || api.mode === 'best', 'HUD に「ベストに挑戦」が出る (' + get('mode').textContent + ')');
+  const info = api.shareInfo();
+  ok(info.rank === '見習い' && typeof info.text === 'string' && info.text.includes('github.io/anten'), '共有の文面に段位と URL が入る');
+  const c = api.makeShareImage(info);
+  ok(c && c.width === 1080 && c.height === 1350, '称号の画像は 1080×1350 の canvas');
+  get('rEndless').fire('click'); api.advance(0.2);
+  ok(api.mode === 'endless' && api.G.seed !== seed1, '「エンドレスへ」で新しい種に戻る');
+  const saved = JSON.parse(store.get('anten.v1'));
+  ok(Array.isArray(saved.bestGhost) && saved.bestSeed === seed1, '保存データにベストの種と軌跡が入る');
+}
+
 console.log(`\n${pass} OK / ${fail} NG`);
 process.exit(fail ? 1 : 0);

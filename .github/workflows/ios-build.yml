@@ -112,7 +112,8 @@ jobs:
           echo "表示名: $(/usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" "$APP/Info.plist")"
           echo "同梱した Web 資産:"; ls -1 "$APP/public"
           echo "フレームワーク:"; ls -1 "$APP/Frameworks"
-          for fw in Capacitor CapacitorApp CapacitorHaptics CapacitorLocalNotifications CapacitorStatusBar; do
+          /usr/libexec/PlistBuddy -c "Print :NSPhotoLibraryAddUsageDescription" "$APP/Info.plist" >/dev/null || { echo "::error::NSPhotoLibraryAddUsageDescription がありません（共有シートの画像の保存で落ちる）"; exit 1; }
+          for fw in Capacitor CapacitorApp CapacitorFilesystem CapacitorHaptics CapacitorLocalNotifications CapacitorShare CapacitorStatusBar; do
             test -d "$APP/Frameworks/$fw.framework" || { echo "::error::$fw.framework がありません"; exit 1; }
           done
 
