@@ -87,7 +87,8 @@ body.dark #score.gold,body.dark #best.gold{color:var(--gold)}
 #rScore.gold{color:var(--gold)}
 #rBadge{font-size:12px;font-weight:700;color:var(--paper);background:var(--ink);padding:4px 9px;border-radius:999px;letter-spacing:.06em}
 #rBadge.gold{background:var(--gold);color:var(--ink)}
-#rRank{font-size:13px;color:var(--ink2);letter-spacing:.1em}
+#rRank{font-size:13px;color:var(--ink2);letter-spacing:.1em;display:flex;align-items:center;gap:8px}
+#rEmblem{width:36px;height:36px}
 #rRank b{font-weight:800;color:var(--ink);font-size:15px;margin-left:6px}
 .stats3{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:300px;border-top:1px solid var(--paper2);border-bottom:1px solid var(--paper2);padding:6px 0}
 .stats3 div{text-align:center}
@@ -212,7 +213,7 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
 
   <div id="result">
     <div class="big"><div id="rScore">0</div><div id="rBadge" hidden>ベスト更新</div></div>
-    <div id="rRank">段位<b id="rRankName">見習い</b></div>
+    <div id="rRank"><canvas id="rEmblem" width="112" height="112" aria-hidden="true"></canvas>段位<b id="rRankName">見習い</b></div>
     <div class="stats3"><div><b id="rRows">0</b><span>列</span></div><div><b id="rDark">0</b><span>暗列</span></div><div><b id="rStreak">0</b><span>最長連続暗</span></div></div>
     <div class="prog"><div class="t"><span id="rProgL">蒼まで</span><span id="rProgR">0 / 100 列</span></div><div class="bar"><i id="rProgBar"></i></div></div>
     <div id="rDaily" hidden></div>
@@ -319,6 +320,43 @@ function load() {
 }
 function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 保存できない環境でも遊べる */ } }
 function rankOf(best) { let r = RANKS[0][1]; for (const [at, name] of RANKS) if (best >= at) r = name; return r; }
+function rankIndex(best) { let i = 0; for (let k = 0; k < RANKS.length; k++) if (best >= RANKS[k][0]) i = k; return i; }
+// 段位の紋章。g に中心 (cx, cy)・半径 r で描く。dark=true は暗い地（共有画像）、false は紙の地（リザルト）
+function drawEmblem(g, cx, cy, r, idx, emberCol, dark) {
+  const line = dark ? COL.paper : COL.ink, sub = dark ? COL.cyan : '#1098B8', fillDark = dark ? COL.dark : COL.paper;
+  g.save(); g.translate(cx, cy); g.lineCap = 'round'; g.lineJoin = 'round';
+  // 外の輪と地
+  g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fillStyle = fillDark; g.fill(); g.strokeStyle = line; g.lineWidth = r * .045; g.stroke();
+  const ember = (rr, glow) => {
+    if (glow) { const eg = g.createRadialGradient(0, 0, 0, 0, 0, rr * 2.6); eg.addColorStop(0, dark ? 'rgba(255,255,255,.9)' : 'rgba(21,22,26,.18)'); eg.addColorStop(.35, dark ? emberCol : 'rgba(21,22,26,.06)'); eg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = eg; g.beginPath(); g.arc(0, 0, rr * 2.6, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = dark ? '#fff' : line; g.beginPath(); g.arc(0, 0, rr, 0, Math.PI * 2); g.fill();
+    if (!dark) { g.fillStyle = COL.paper; g.beginPath(); g.arc(0, 0, rr * .45, 0, Math.PI * 2); g.fill(); }
+  };
+  const lens = (w, h, lidRatio) => { // 目（レンズ形）。lidRatio ぶん上をまぶたで隠す
+    g.beginPath(); g.moveTo(-w, 0); g.quadraticCurveTo(0, -h * 2, w, 0); g.quadraticCurveTo(0, h * 2, -w, 0); g.closePath();
+    g.fillStyle = dark ? COL.paper : fillDark; g.fill(); g.strokeStyle = line; g.lineWidth = r * .04; g.stroke();
+    g.fillStyle = sub; g.beginPath(); g.arc(0, h * .35, h * .32, 0, Math.PI * 2); g.fill();
+    if (lidRatio > 0) { g.save(); g.beginPath(); g.moveTo(-w, 0); g.quadraticCurveTo(0, -h * 2, w, 0); g.closePath(); g.clip(); g.fillStyle = dark ? COL.dark : line; g.beginPath(); g.rect(-w, -h * 2, w * 2, h * (2 - 0) * lidRatio + h * 0); g.fill(); g.restore();
+      g.beginPath(); g.moveTo(-w, 0); g.quadraticCurveTo(0, h * .9 - h * 2 * (1 - lidRatio), w, 0); g.strokeStyle = line; g.lineWidth = r * .04; g.stroke(); }
+  };
+  g.strokeStyle = sub; g.lineWidth = r * .05;
+  switch (idx) {
+    case 0: // 見習い: 小さな熾火と、細い輪
+      ember(r * .14, true); g.beginPath(); g.arc(0, 0, r * .5, 0, Math.PI * 2); g.strokeStyle = sub; g.globalAlpha = .7; g.stroke(); g.globalAlpha = 1; break;
+    case 1: // 手探り: 熾火の左右に点線の弧（手探りの軌跡）
+      ember(r * .16, true); g.setLineDash([r * .06, r * .07]); for (const sgn of [-1, 1]) { g.beginPath(); g.arc(0, 0, r * .62, sgn > 0 ? -.9 : Math.PI - .9, sgn > 0 ? .9 : Math.PI + .9); g.stroke(); } g.setLineDash([]); break;
+    case 2: // 夜目: 半分閉じた目（アイコンと同じ）
+      lens(r * .62, r * .3, .5); break;
+    case 3: // 暗中: 熾火を囲む4本の残像
+      ember(r * .16, true); g.strokeStyle = sub; g.lineWidth = r * .07; for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; g.beginPath(); g.moveTo(Math.cos(a - .5) * r * .62, Math.sin(a - .5) * r * .62); g.lineTo(Math.cos(a + .5) * r * .62, Math.sin(a + .5) * r * .62); g.stroke(); } break;
+    case 4: // 心眼: 開いた目と8本の光
+      g.strokeStyle = sub; g.lineWidth = r * .045; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; g.beginPath(); g.moveTo(Math.cos(a) * r * .62, Math.sin(a) * r * .62); g.lineTo(Math.cos(a) * r * .8, Math.sin(a) * r * .8); g.stroke(); } lens(r * .5, r * .25, 0); break;
+    default: // 無明: 二重の輪の中の熾火（闇そのものが光る）
+      g.beginPath(); g.arc(0, 0, r * .74, 0, Math.PI * 2); g.strokeStyle = sub; g.lineWidth = r * .035; g.stroke();
+      g.beginPath(); g.arc(0, 0, r * .56, 0, Math.PI * 2); g.strokeStyle = line; g.lineWidth = r * .025; g.globalAlpha = .6; g.stroke(); g.globalAlpha = 1; ember(r * .2, true); break;
+  }
+  g.restore();
+}
 function tierOf(total) { let t = 0; for (let i = 0; i < EMBERS.length; i++) if (total >= EMBERS[i].at) t = i; return t; }
 
 // ================= 画面の大きさ =================
@@ -823,7 +861,7 @@ function showResult() {
   persist();
   $('rScore').textContent = G.score; $('rScore').classList.toggle('gold', isBest && G.score > 0);
   $('rBadge').hidden = !(isBest && G.score > 0); $('rBadge').classList.toggle('gold', isBest);
-  $('rRankName').textContent = rankOf(S.best);
+  $('rRankName').textContent = rankOf(S.best); drawResultEmblem();
   $('rRows').textContent = G.passed; $('rDark').textContent = G.darkRows; $('rStreak').textContent = G.maxStreak;
   const next = EMBERS[S.tier + 1];
   $('rProgBar').style.width = '0%';
@@ -849,6 +887,7 @@ function resultButtons() {
   $('rBest').hidden = !(mode === 'endless' && S.bestGhost && S.best > 0);
   $('rEndless').hidden = !(daily || best);
 }
+function drawResultEmblem() { try { const c = $('rEmblem'), g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); drawEmblem(g, 56, 56, 52, rankIndex(S.best), EMBERS[S.tier].col || COL.cyan, false); } catch (e) {} }
 function resultTap() {
   if (fxTime - resultAt < .4) return; // 出た直後の連打で結果を見逃さないように
   sfx.btn();
@@ -879,7 +918,7 @@ function enterDaily() {
     state = ST.RESULT; resultAt = fxTime;
     $('title').classList.add('gone'); document.body.classList.remove('intro');
     $('rScore').textContent = S.daily.best; $('rScore').classList.remove('gold'); $('rBadge').hidden = true;
-    $('rRankName').textContent = rankOf(S.best);
+    $('rRankName').textContent = rankOf(S.best); drawResultEmblem();
     $('rRows').textContent = S.daily.bestRows; $('rDark').textContent = S.daily.bestDark; $('rStreak').textContent = '-';
     $('rDaily').hidden = false; $('rDaily').innerHTML = `今日の記録 <b>${S.daily.best}</b>点 ／ 明日また`;
     $('rTap').textContent = 'タップでエンドレスへ';
@@ -925,25 +964,33 @@ function makeShareImage(info) {
   g.strokeStyle = COL.darkEdge; g.lineWidth = 3;
   g.beginPath(); g.moveTo(-10, 230); g.quadraticCurveTo(Wi / 2, 300, Wi + 10, 230); g.stroke();
   g.beginPath(); g.moveTo(-10, 1190); g.quadraticCurveTo(Wi / 2, 1120, Wi + 10, 1190); g.stroke();
-  // 熾火
+  // 熾火の光と、段位の紋章
   const col = EMBERS[S.tier].col || COL.cyan;
-  const eg = g.createRadialGradient(Wi / 2, 760, 0, Wi / 2, 760, 230); eg.addColorStop(0, 'rgba(255,255,255,.95)'); eg.addColorStop(.25, col); eg.addColorStop(1, 'rgba(255,255,255,0)');
-  g.globalAlpha = .55; g.fillStyle = eg; g.beginPath(); g.arc(Wi / 2, 760, 230, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1;
+  const eg = g.createRadialGradient(Wi / 2, 440, 0, Wi / 2, 440, 260); eg.addColorStop(0, 'rgba(255,255,255,.55)'); eg.addColorStop(.3, col); eg.addColorStop(1, 'rgba(255,255,255,0)');
+  g.globalAlpha = .35; g.fillStyle = eg; g.beginPath(); g.arc(Wi / 2, 440, 260, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1;
+  drawEmblem(g, Wi / 2, 440, 150, rankIndex(S.best), col, true);
   g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillStyle = COL.paper; g.font = '800 64px ' + FONT; g.fillText('暗転', Wi / 2, 118);
   g.fillStyle = COL.cyan; g.font = '600 34px ' + FONT; g.fillText('触ると動ける。でも見えない', Wi / 2, 182);
-  g.fillStyle = COL.cyan; g.font = '700 38px ' + FONT; g.fillText(info.label, Wi / 2, 520);
-  g.fillStyle = COL.paper; g.font = '800 210px ' + FONT; g.fillText(info.rank, Wi / 2, 690);
-  g.fillStyle = COL.paper; g.font = '800 128px ' + FONT; g.fillText(String(info.score), Wi / 2 - 30, 900);
-  g.fillStyle = COL.ink3; g.font = '700 44px ' + FONT; g.fillText('点', Wi / 2 + 120, 930);
-  g.fillStyle = COL.ink3; g.font = '600 40px ' + FONT; g.fillText(`${info.rows}列 ・ 暗列 ${info.dark} ・ 最長連続暗 ${info.streak}`, Wi / 2, 1010);
-  g.fillStyle = COL.ink3; g.font = '600 36px ' + FONT; g.fillText(info.date, Wi / 2, 1075);
+  g.fillStyle = COL.cyan; g.font = '700 38px ' + FONT; g.fillText(info.label, Wi / 2, 650);
+  g.fillStyle = COL.paper; g.font = '800 190px ' + FONT; g.fillText(info.rank, Wi / 2, 790);
+  g.fillStyle = COL.paper; g.font = '800 120px ' + FONT; g.fillText(String(info.score), Wi / 2 - 30, 960);
+  g.fillStyle = COL.ink3; g.font = '700 44px ' + FONT; g.fillText('点', Wi / 2 + 120, 988);
+  g.fillStyle = COL.ink3; g.font = '600 38px ' + FONT; g.fillText(`${info.rows}列 ・ 暗列 ${info.dark} ・ 最長連続暗 ${info.streak}`, Wi / 2, 1060);
+  if (info.week && info.week.badge) { // 週のバッジ（常連・精勤・皆勤）: 金色の帯と月桂の弧
+    g.fillStyle = COL.gold; g.font = '800 44px ' + FONT; g.fillText(`今週 ${info.week.days}日 ・ ${info.week.badge}`, Wi / 2, 1135);
+    g.strokeStyle = COL.gold; g.lineWidth = 4; g.lineCap = 'round';
+    for (const sgn of [-1, 1]) { g.beginPath(); g.arc(Wi / 2 + sgn * 250, 1135, 44, sgn > 0 ? -2.2 : Math.PI - 1, sgn > 0 ? 1 : Math.PI + 2.2); g.stroke(); for (let i = 0; i < 4; i++) { const a = (sgn > 0 ? -1.9 : Math.PI - .7) + i * .7 * (sgn > 0 ? 1 : 1); const x = Wi / 2 + sgn * 250 + Math.cos(a) * 44, y = 1135 + Math.sin(a) * 44; g.beginPath(); g.ellipse(x, y, 11, 5, a + Math.PI / 2, 0, Math.PI * 2); g.fillStyle = COL.gold; g.fill(); } }
+    g.fillStyle = COL.ink3; g.font = '600 32px ' + FONT; g.fillText(info.date, Wi / 2, 1195);
+  } else {
+    g.fillStyle = COL.ink3; g.font = '600 36px ' + FONT; g.fillText(info.date, Wi / 2, 1130);
+  }
   g.fillStyle = COL.ink3; g.font = '600 34px ' + FONT; g.fillText('kiyotake1229.github.io/anten', Wi / 2, 1270);
   return c;
 }
 function shareInfo() {
   const daily = mode === 'daily', d = localDateStr().replace(/-/g, '/');
-  if (daily) return { label: `今日の暗転 ${S.daily.date.replace(/-/g, '/')}`, rank: rankOf(S.best), score: S.daily.best, rows: S.daily.bestRows, dark: S.daily.bestDark, streak: G.maxStreak, date: d, text: shareText() };
+  if (daily) return { label: `今日の暗転 ${S.daily.date.replace(/-/g, '/')}`, rank: rankOf(S.best), score: S.daily.best, rows: S.daily.bestRows, dark: S.daily.bestDark, streak: G.maxStreak, date: d, week: weekSummary(S.daily.date), text: shareText() };
   return { label: '段位', rank: rankOf(S.best), score: G.score, rows: G.passed, dark: G.darkRows, streak: G.maxStreak, date: d,
     text: `暗転｜${G.score}点（${G.passed}列・暗${G.darkRows}）｜段位 ${rankOf(S.best)}${G.score >= S.best && G.score > 0 ? '（ベスト）' : ''} https://kiyotake1229.github.io/anten/` };
 }
@@ -1338,7 +1385,7 @@ function simulate({ seed = 1, n = 300, kind = 'A', log: keepLog = false } = {}) 
 }
 // 検証用: 画面が止まっていても内部時間を sec 秒ぶん進める（60fps 相当）
 function advance(sec) { let now = lastT || 0; for (let i = 0, n = Math.round(sec * 60); i < n; i++) { now += 1 / 60; tick(now); } return fxTime; }
-window.__anten = { simulate, advance, weekSummary, makeShareImage, shareInfo, get mode() { return mode; }, set mode(m) { mode = m; }, get view() { return { W, LH, SC, OX, OY, PY, FY }; }, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
+window.__anten = { simulate, advance, weekSummary, makeShareImage, shareInfo, drawEmblem, rankIndex, RANKS, get mode() { return mode; }, set mode(m) { mode = m; }, get view() { return { W, LH, SC, OX, OY, PY, FY }; }, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
 
 // ================= 画面のつなぎ =================
 function refreshTitle() {

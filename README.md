@@ -9,6 +9,7 @@
 | 状態 | **Web版 v1.2 公開中（GitHub Pages）**。PWA 対応済み。**iOS プロジェクト構築済み**（GitHub Actions でビルド確認。Xcode 環境で署名して申請するだけ） |
 | 一般公開（GitHub Pages） | https://kiyotake1229.github.io/anten/ （リポジトリ https://github.com/kiyotake1229/anten 。`index.html` を push すると数十秒で反映） |
 | サポート・プライバシーポリシー | https://kiyotake1229.github.io/anten/support.html （App Store のサポート URL。ポリシーは `#privacy`） |
+| 紹介ページ（営業・ポートフォリオ用） | https://kiyotake1229.github.io/anten/about.html （動画・絵コンテ・スクリーンショット・段位の紋章・つくり） |
 | 開発確認用（Claude Artifact） | https://claude.ai/artifact/DqR5bVgq24rCGWqpfm8GVx （非公開。見るには共有設定が必要） |
 | iOS | Capacitor 7 → [`ios-app/`](ios-app/)。Bundle ID `work.ltv.anten`。GitHub Actions「iOS build check」で署名なしビルドが成功（最新 2026-10-26、v1.2・共有プラグイン込み。macos-26・Xcode 26。Simulator Debug / 実機 Release）。手順は [ios-app/岩崎さんへの引き渡し手順.md](ios-app/岩崎さんへの引き渡し手順.md) |
 | 本体 | `index.html`（約85KB。画像・音源ファイルなし。外部ライブラリなし） |
@@ -40,7 +41,7 @@
 
 - エンドレス（ベストを更新していく）と **今日の暗転**（日付で決まる同じ配置。1日3回。2回目からはその日のベストの軌跡＝ゴーストが一緒に走る。記録を共有できる）
 - **ベストに挑む**（v1.2）: 自己ベストを出した配置にもう一度挑む。ベストの軌跡が「ベスト」の輪で一緒に走る
-- **称号を共有**（v1.2）: 段位・得点・列数を1枚の画像（1080×1350）にして共有。iPhone / Android は共有シート、PC は画像を表示して保存
+- **称号を共有**（v1.2）: 段位の紋章・得点・列数を1枚の画像（1080×1350）にして共有。日替わりでは週のバッジ（常連・精勤・皆勤）も入る。iPhone / Android は共有シート、PC は画像を表示して保存
 - 段位（自己ベストで決まる）: 見習い / 手探り / 夜目 / 暗中 / 心眼 / 無明
 - 熾火の色（累計の列数で解放）: 白 → 蒼（100列）→ 金（400）→ 紅（1,200）→ 虹（3,000）
 - 音はすべて WebAudio で合成（まぶた・通過・暗闇のハム音・忍び列の擦れる音・ヒヤリ・死亡）。設定で ON/OFF
@@ -60,6 +61,7 @@ App Store への申請手順は **[ios-app/岩崎さんへの引き渡し手順.
 新感覚/
   index.html              アプリ本体（HTML・CSS・JavaScript を1ファイルに）
   support.html            サポート・プライバシーポリシー（App Store のサポート URL）
+  about.html              紹介ページ（営業・ポートフォリオ用。動画・絵コンテ・段位の紋章）
   manifest.json / sw.js   PWA 用（ホーム画面に追加、通信なしで起動）
   icon.svg                アイコンの元データ（半分閉じた目）
   icon-192.png / icon-512.png / icon-512-maskable.png / apple-touch-icon.png
@@ -97,10 +99,12 @@ App Store への申請手順は **[ios-app/岩崎さんへの引き渡し手順.
 - スクリーンショットと営業用の動画: `docs/20261013_DOC_0007_IOS_App_Store用スクリーンショットと営業用の動画.md`
 - ベストに挑む: `docs/20261026_NEW_0008_GAME_ベストに挑む（同じ配置をゴーストと走る）.md`
 - 称号の画像を共有: `docs/20261026_NEW_0009_APP_称号の画像を共有.md`
+- 段位の紋章と週のバッジ: `docs/20261026_ENH_0010_APP_段位の紋章と週のバッジを画像に.md`
+- 紹介ページ: `docs/20261026_DOC_0011_ALL_紹介ページ（営業・ポートフォリオ用）.md`
 - 機能追加・バグ修正・改善をしたら、1件ごとに文書を足して `bash docs/manager/generate_docs_json.sh` を実行する
 
 ## 残作業
 
 - 実機（iPhone / Android）での確認: 最初のタッチで音が鳴るか、閉眼が真っ暗になるか、iOS 版の通知と触覚
 - App Store 申請（岩崎さん）: 署名・アップロード（スクリーンショットと文面は用意済み）
-- 拡張案: 段位ごとの称号に絵柄を付ける（いまは文字と熾火の光）、週の皆勤バッジの画像化
+- 拡張案: ランキング（端末内の上位10回の記録）、紹介ページの英語版

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>暗転 — 紹介</title>
+<meta name="description" content="触ると動ける。でも見えない。見るか動くかを親指ひとつで選び続ける、新感覚の落下回避ゲーム「暗転」の紹介ページ。最初の10秒の動画、遊び方、6つの段位、技術のまとめ。">
+<meta name="theme-color" content="#07080C">
+<link rel="canonical" href="https://kiyotake1229.github.io/anten/about.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="暗転">
+<meta property="og:title" content="暗転 — 触ると動ける。でも見えない">
+<meta property="og:description" content="見るか動くかを親指ひとつで選び続ける、新感覚の落下回避ゲーム。ブラウザですぐ遊べます。">
+<meta property="og:url" content="https://kiyotake1229.github.io/anten/about.html">
+<meta property="og:image" content="https://kiyotake1229.github.io/anten/資料/暗転_最初の10秒_絵コンテ.jpg">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+/* アプリと同じトークン。上から下へ「暗闇 → 紙 → 暗闇」と、まぶたが開くように読ませる */
+:root{
+  --paper:#F3EFE6; --paper2:#E6E0D4; --grid:#E4DFD3;
+  --ink:#15161A; --ink2:#3A3C44; --ink3:#8A8C94;
+  --dark:#07080C; --darkedge:#2A2D36; --cyan:#5BE8FF; --cyan-deep:#1098B8; --amber:#FFB36B; --gold:#FFD36B;
+  --body:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--dark);color:var(--paper);font-family:var(--body);line-height:1.85;font-size:16px}
+a{color:var(--cyan);text-decoration-thickness:1px;text-underline-offset:3px}
+.wrap{max-width:960px;margin:0 auto;padding-inline:20px}
+.sec{padding-block:72px}
+.sec h2{margin:0 0 8px;font-size:28px;font-weight:800;letter-spacing:.12em;text-wrap:balance}
+.sec .lead{margin:0 0 28px;color:var(--ink3);font-size:15px;letter-spacing:.06em}
+.eye{display:block;width:56px;height:36px;margin:0 auto 18px;color:var(--paper);animation:blink 5s 1.5s ease-in-out infinite}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+/* ---- 冒頭（暗闇） ---- */
+.hero{position:relative;overflow:hidden;padding-block:calc(env(safe-area-inset-top,0px) + 84px) 72px;text-align:center}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 45% at 50% 42%,rgba(91,232,255,.14),transparent 70%);pointer-events:none}
+.hero .row{position:absolute;left:-20px;right:-20px;height:30px;background:var(--cyan);opacity:.12;border-radius:6px;pointer-events:none}
+.hero h1{margin:0;font-size:clamp(64px,14vw,120px);font-weight:800;letter-spacing:.2em;text-indent:.2em;line-height:1}
+.hero .tag{margin:16px 0 0;font-size:clamp(18px,3.2vw,24px);font-weight:700;color:var(--cyan);letter-spacing:.08em}
+.hero .sub{margin:14px auto 0;max-width:34em;color:var(--ink3);font-size:15px}
+.cta{display:inline-flex;align-items:center;gap:10px;margin-top:34px;padding:16px 28px;border-radius:999px;background:var(--paper);color:var(--ink);text-decoration:none;font-weight:800;letter-spacing:.14em;transition:transform .25s var(--ease),box-shadow .25s}
+.cta:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(91,232,255,.25)}
+.cta svg{width:20px;height:20px}
+.hero .meta{margin-top:16px;font-size:12px;color:var(--ink3);letter-spacing:.1em}
+/* ---- 最初の10秒 ---- */
+.film{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:28px;align-items:start}
+.film video,.film img{width:100%;max-width:100%;border-radius:18px;display:block;border:1px solid var(--darkedge);background:#000}
+.film .board{grid-column:1 / -1}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
+.steps li{padding:14px 14px 12px;border:1px solid var(--darkedge);border-radius:14px;font-size:13px;line-height:1.7;color:var(--paper)}
+.steps li b{display:block;font-size:12px;letter-spacing:.14em;color:var(--cyan);margin-bottom:4px}
+/* ---- 紙のセクション ---- */
+.paper{background:var(--paper);color:var(--ink);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px}
+.paper .lead{color:var(--ink2)}
+.lid{height:44px;background:var(--dark);position:relative}
+.lid::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:44px;background:var(--paper);clip-path:ellipse(60% 100% at 50% 100%)}
+.lid.rev{background:var(--paper)}
+.lid.rev::after{background:var(--dark);clip-path:ellipse(60% 100% at 50% 0%);top:-1px;bottom:auto}
+.rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0;padding:0;list-style:none}
+.rules li{background:rgba(243,239,230,.9);border:1px solid var(--paper2);border-radius:16px;padding:18px 18px 14px}
+.rules li b{display:block;font-size:17px;font-weight:800;margin-bottom:6px;letter-spacing:.06em}
+.rules li span{font-size:14px;color:var(--ink2)}
+.shots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.shots img{width:100%;max-width:100%;border-radius:12px;display:block;box-shadow:0 20px 50px -24px rgba(21,22,26,.6)}
+/* ---- 段位 ---- */
+.ranks{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.rank{text-align:center;padding:16px 8px 14px;border:1px solid var(--darkedge);border-radius:16px}
+.rank canvas{width:84px;height:84px;display:block;margin:0 auto 10px}
+.rank b{display:block;font-size:18px;font-weight:800;letter-spacing:.1em}
+.rank span{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.embers{display:flex;flex-wrap:wrap;gap:10px 18px;margin:18px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink3)}
+.embers li::before{content:"";display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:-1px;background:var(--c);box-shadow:0 0 10px var(--c)}
+/* ---- 技術 ---- */
+.tech{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 28px;margin:0;padding:0}
+.tech dt{font-weight:800;letter-spacing:.08em;color:var(--paper);margin-top:12px}
+.tech dd{margin:2px 0 0;color:var(--ink3);font-size:14px}
+.tech code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--cyan)}
+footer{padding:40px 20px calc(env(safe-area-inset-bottom,0px) + 40px);text-align:center;font-size:12px;color:var(--ink3);line-height:2}
+@media (max-width:760px){
+  .film{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rules{grid-template-columns:1fr}
+  .shots{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .shots img:nth-child(n+4){display:none}
+  .ranks{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tech{grid-template-columns:1fr}
+  .sec{padding-block:52px}
+}
+@media (prefers-reduced-motion:reduce){.eye{animation:none}.cta{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="row" style="top:22%;clip-path:polygon(0 0,38% 0,38% 100%,0 100%,0 0,62% 0,100% 0,100% 100%,62% 100%)"></div>
+  <div class="row" style="top:62%;clip-path:polygon(0 0,52% 0,52% 100%,0 100%,0 0,78% 0,100% 0,100% 100%,78% 100%)"></div>
+  <div class="wrap">
+    <svg class="eye" viewBox="0 0 44 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14c5-8 12-12 20-12s15 4 20 12c-5 8-12 12-20 12S7 22 2 14z"/><circle cx="22" cy="14" r="5"/><circle cx="22" cy="14" r="1.6" fill="currentColor" stroke="none"/></svg>
+    <h1>暗転</h1>
+    <p class="tag">触ると動ける。でも見えない</p>
+    <p class="sub">白く光る点を、落ちてくる黒い列の隙間に通し続ける。指で触れている間だけ動ける。けれど触れた瞬間にまぶたが閉じて、画面は真っ暗。離せば見える。でも、動けない。</p>
+    <a class="cta" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></svg>ブラウザで遊ぶ</a>
+    <p class="meta">インストール不要 ・ 通信なし ・ 1回 20秒〜3分 ・ iPhone / Android / PC</p>
+  </div>
+</header>
+
+<section class="sec">
+  <div class="wrap">
+    <h2>最初の10秒</h2>
+    <p class="lead">説明は1行だけ。触れた瞬間に「え、見えない」が起きて、ルールが体に入ります。</p>
+    <div class="film">
+      <video src="資料/暗転_最初の10秒.webm" poster="資料/暗転_最初の10秒_絵コンテ.jpg" autoplay muted loop playsinline controls></video>
+      <div>
+        <img class="board" src="資料/暗転_最初の10秒_絵コンテ.jpg" alt="最初の10秒の4コマ: タイトル、触れて真っ暗、離して見える、また閉じる">
+        <ol class="steps">
+          <li><b>0秒</b>紙の上に黒い列と、白く光る点。</li>
+          <li><b>1秒</b>触れる。まぶたが閉じて、真っ暗。残像だけが青白く残る。</li>
+          <li><b>3秒</b>離す。列が見える。でも動けない。</li>
+          <li><b>4秒</b>閉じたまま抜けると +2、+3、+4……。</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="lid"></div>
+<section class="sec paper">
+  <div class="wrap">
+    <h2>見るか、動くか</h2>
+    <p class="lead">たった1つの決まりが、毎秒の選択になります。</p>
+    <ul class="rules">
+      <li><b>触れている間だけ動ける</b><span>指を横に滑らせると光る点が動く。指の縦の位置は関係なし。画面のどこを触ってもいい。</span></li>
+      <li><b>触れた瞬間、目を閉じる</b><span>画面は真っ暗。閉じた瞬間の列が残像として1秒だけ残り、音が左右から位置を教える。</span></li>
+      <li><b>離すと見える。でも動けない</b><span>次の列の隙間を読んで、また閉じる。閉じたまま列を抜けるほど得点が伸びる。</span></li>
+    </ul>
+    <h2 style="margin-top:56px">読みが深まる列</h2>
+    <p class="lead">忍び列は目を閉じている間だけ動く。鏡の列は閉じている間だけ左右が逆。選択列は隙間が2つ、片方は遠回り。</p>
+    <div class="shots">
+      <img src="ios-app/screenshots/iphone-6.9/1-title.jpg" alt="タイトル画面" loading="lazy">
+      <img src="ios-app/screenshots/iphone-6.9/2-open.jpg" alt="開眼中。列と光る点が見える" loading="lazy">
+      <img src="ios-app/screenshots/iphone-6.9/3-dark.jpg" alt="閉眼中。真っ暗に青白い残像" loading="lazy">
+      <img src="ios-app/screenshots/iphone-6.9/4-result.jpg" alt="リザルト。段位と熾火の進み具合" loading="lazy">
+      <img src="ios-app/screenshots/iphone-6.9/5-daily.jpg" alt="今日の暗転。自己ベストの軌跡と走る" loading="lazy">
+    </div>
+  </div>
+</section>
+<div class="lid rev"></div>
+
+<section class="sec">
+  <div class="wrap">
+    <h2>六つの段位</h2>
+    <p class="lead">自己ベストで段位が上がる。段位と得点は1枚の画像にして共有できる。</p>
+    <div class="ranks" id="ranks"></div>
+    <ul class="embers">
+      <li style="--c:#FFFFFF">白 — はじめの熾火</li>
+      <li style="--c:#7CC4FF">蒼 — 累計100列</li>
+      <li style="--c:#FFD36B">金 — 400列</li>
+      <li style="--c:#FF6B6B">紅 — 1,200列</li>
+      <li style="--c:#5BE8FF">虹 — 3,000列</li>
+    </ul>
+    <p class="lead" style="margin-top:14px">遊んだ累計で、光る点（熾火）の色が変わる。日付で決まる同じ配置に1日3回だけ挑む「今日の暗転」、自己ベストの軌跡と走る「ベストに挑む」、週の皆勤バッジ。</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <h2>つくり</h2>
+    <p class="lead">1ファイルで完結し、通信せず、端末の中だけで動く。だから速く、軽く、どこでも同じに動く。</p>
+    <dl class="tech">
+      <dt>本体</dt><dd>HTML 1ファイル（約 90KB）。画像・音源・外部ライブラリなし。音はすべて WebAudio で合成</dd>
+      <dt>動く場所</dt><dd>ブラウザ（PWA。ホーム画面に追加できる）と iOS アプリ（Capacitor。触覚・朝のお知らせ・共有シート）</dd>
+      <dt>理不尽をなくす仕組み</dt><dd>動かないと抜けられない列は2本までで3本目は必ず据え列。列の生成を自動操縦が何千列も走って検証（<code>node tools/test.mjs</code>・37件）</dd>
+      <dt>データ</dt><dd>記録は端末内だけ。アカウントも通信もトラッキングもなし</dd>
+      <dt>公開</dt><dd>GitHub Pages で公開、push ごとに iOS の署名なしビルドを GitHub Actions で確認</dd>
+      <dt>制作</dt><dd>企画・設計・実装・検証・素材まで AI と協働し、着手から公開まで2日</dd>
+    </dl>
+  </div>
+</section>
+
+<footer>
+  © 2026 ltv.work　暗転　·　<a href="./">遊ぶ</a>　·　<a href="support.html">サポート・プライバシーポリシー</a>　·　<a href="https://github.com/kiyotake1229/anten">GitHub</a>
+</footer>
+
+<script>
+// 段位の紋章（アプリ index.html の drawEmblem と同じ絵。ここでは暗い地だけ）
+(() => {
+  const RANKS = [[0, '見習い'], [20, '手探り'], [50, '夜目'], [100, '暗中'], [200, '心眼'], [400, '無明']];
+  const COL = { paper: '#F3EFE6', dark: '#07080C', cyan: '#5BE8FF' };
+  function drawEmblem(g, cx, cy, r, idx, emberCol) {
+    const line = COL.paper, sub = COL.cyan;
+    g.save(); g.translate(cx, cy); g.lineCap = 'round'; g.lineJoin = 'round';
+    g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fillStyle = COL.dark; g.fill(); g.strokeStyle = line; g.lineWidth = r * .045; g.stroke();
+    const ember = (rr) => { const eg = g.createRadialGradient(0, 0, 0, 0, 0, rr * 2.6); eg.addColorStop(0, 'rgba(255,255,255,.9)'); eg.addColorStop(.35, emberCol); eg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = eg; g.beginPath(); g.arc(0, 0, rr * 2.6, 0, Math.PI * 2); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 0, rr, 0, Math.PI * 2); g.fill(); };
+    const lens = (w, h, lidRatio) => {
+      g.beginPath(); g.moveTo(-w, 0); g.quadraticCurveTo(0, -h * 2, w, 0); g.quadraticCurveTo(0, h * 2, -w, 0); g.closePath();
+      g.fillStyle = COL.paper; g.fill(); g.strokeStyle = line; g.lineWidth = r * .04; g.stroke();
+      g.fillStyle = sub; g.beginPath(); g.arc(0, h * .35, h * .32, 0, Math.PI * 2); g.fill();
+      if (lidRatio > 0) { g.save(); g.beginPath(); g.moveTo(-w, 0); g.quadraticCurveTo(0, -h * 2, w, 0); g.closePath(); g.clip(); g.fillStyle = COL.dark; g.fillRect(-w, -h * 2, w * 2, h * 2 * lidRatio); g.restore();
+        g.beginPath(); g.moveTo(-w, 0); g.quadraticCurveTo(0, h * .9 - h * 2 * (1 - lidRatio), w, 0); g.strokeStyle = line; g.lineWidth = r * .04; g.stroke(); }
+    };
+    g.strokeStyle = sub; g.lineWidth = r * .05;
+    switch (idx) {
+      case 0: ember(r * .14); g.beginPath(); g.arc(0, 0, r * .5, 0, Math.PI * 2); g.globalAlpha = .7; g.stroke(); g.globalAlpha = 1; break;
+      case 1: ember(r * .16); g.setLineDash([r * .06, r * .07]); for (const sgn of [-1, 1]) { g.beginPath(); g.arc(0, 0, r * .62, sgn > 0 ? -.9 : Math.PI - .9, sgn > 0 ? .9 : Math.PI + .9); g.stroke(); } g.setLineDash([]); break;
+      case 2: lens(r * .62, r * .3, .5); break;
+      case 3: ember(r * .16); g.lineWidth = r * .07; for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; g.beginPath(); g.moveTo(Math.cos(a - .5) * r * .62, Math.sin(a - .5) * r * .62); g.lineTo(Math.cos(a + .5) * r * .62, Math.sin(a + .5) * r * .62); g.stroke(); } break;
+      case 4: g.lineWidth = r * .045; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; g.beginPath(); g.moveTo(Math.cos(a) * r * .62, Math.sin(a) * r * .62); g.lineTo(Math.cos(a) * r * .8, Math.sin(a) * r * .8); g.stroke(); } lens(r * .5, r * .25, 0); break;
+      default: g.beginPath(); g.arc(0, 0, r * .74, 0, Math.PI * 2); g.lineWidth = r * .035; g.stroke(); g.beginPath(); g.arc(0, 0, r * .56, 0, Math.PI * 2); g.strokeStyle = line; g.lineWidth = r * .025; g.globalAlpha = .6; g.stroke(); g.globalAlpha = 1; ember(r * .2); break;
+    }
+    g.restore();
+  }
+  const wrap = document.getElementById('ranks');
+  const cols = ['#FFFFFF', '#7CC4FF', '#7CC4FF', '#FFD36B', '#FF6B6B', '#5BE8FF'];
+  RANKS.forEach(([at, name], i) => {
+    const d = document.createElement('div'); d.className = 'rank';
+    const c = document.createElement('canvas'); c.width = 168; c.height = 168;
+    drawEmblem(c.getContext('2d'), 84, 84, 78, i, cols[i]);
+    d.appendChild(c);
+    const b = document.createElement('b'); b.textContent = name; d.appendChild(b);
+    const s = document.createElement('span'); s.textContent = i < RANKS.length - 1 ? `${at}〜${RANKS[i + 1][0] - 1}点` : `${at}点〜`; d.appendChild(s);
+    wrap.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>
