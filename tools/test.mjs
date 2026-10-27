@@ -22,7 +22,7 @@ function makeApp({ storage = {}, w = 390, h = 844, storageThrows = false } = {})
       setAttribute(k, v) { this.attrs[k] = String(v); }, getAttribute(k) { return this.attrs[k]; },
       addEventListener(t, fn) { (listeners[t] = listeners[t] || []).push(fn); },
       fire(t, ev = {}) { for (const fn of listeners[t] || []) fn({ type: t, target: el, preventDefault() {}, stopPropagation() {}, ...ev }); },
-      appendChild(c) { this.children.push(c); return c; }, remove() {}, closest: () => null, focus() {}, select() {},
+      appendChild(c) { this.children.push(c); return c; }, append(...c) { this.children.push(...c); }, remove() {}, closest: () => null, focus() {}, select() {},
       getBoundingClientRect: () => ({ width: w, height: h, left: 0, top: 0 }), getContext: () => ctx2d, setPointerCapture() {}, releasePointerCapture() {},
       get offsetWidth() { return 100; },
     };
@@ -192,6 +192,18 @@ console.log('[7] ベストに挑む（同じ配置をゴーストと走る）と
   ok(api.mode === 'endless' && api.G.seed !== seed1, '「エンドレスへ」で新しい種に戻る');
   const saved = JSON.parse(store.get('anten.v1'));
   ok(Array.isArray(saved.bestGhost) && saved.bestSeed === seed1, '保存データにベストの種と軌跡が入る');
+}
+
+console.log('[8] 記録（端末内の上位10回）');
+{
+  const { api, fireDoc, get } = makeApp({ storage: { 'anten.v1': JSON.stringify({ v: 1, records: Array.from({ length: 12 }, (_, i) => ({ s: 50 - i, r: 20, d: 3, k: 1, date: '2026-10-01', m: 'e' })) }) } });
+  ok(api.S.records.length === 10, '読み込み時に10件に切り詰める');
+  const down = (x) => fireDoc('pointerdown', { clientX: x, clientY: 600, pointerId: 1, pointerType: 'touch', button: 0, target: { closest: () => null } });
+  const up = (x) => fireDoc('pointerup', { clientX: x, clientY: 600, pointerId: 1 });
+  down(190); api.advance(0.2); up(190); api.advance(12);
+  ok(api.state === 4 && api.S.records.length === 10 && api.S.records.every((r, i, a) => i === 0 || a[i - 1].s >= r.s), 'ラウンド後も10件のまま、得点順に並ぶ');
+  api.openRecords();
+  ok(get('records').classList.contains('open') && get('recList').children.length === 10 && String(get('sumPlays').textContent) === '1', '記録のシートに10行と累計が出る');
 }
 
 console.log(`\n${pass} OK / ${fail} NG`);

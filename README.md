@@ -9,11 +9,11 @@
 | 状態 | **Web版 v1.2 公開中（GitHub Pages）**。PWA 対応済み。**iOS プロジェクト構築済み**（GitHub Actions でビルド確認。Xcode 環境で署名して申請するだけ） |
 | 一般公開（GitHub Pages） | https://kiyotake1229.github.io/anten/ （リポジトリ https://github.com/kiyotake1229/anten 。`index.html` を push すると数十秒で反映） |
 | サポート・プライバシーポリシー | https://kiyotake1229.github.io/anten/support.html （App Store のサポート URL。ポリシーは `#privacy`） |
-| 紹介ページ（営業・ポートフォリオ用） | https://kiyotake1229.github.io/anten/about.html （動画・絵コンテ・スクリーンショット・段位の紋章・つくり） |
+| 紹介ページ（営業・ポートフォリオ用） | https://kiyotake1229.github.io/anten/about.html （動画・絵コンテ・スクリーンショット・段位の紋章・つくり）／ 英語版 https://kiyotake1229.github.io/anten/about-en.html |
 | 開発確認用（Claude Artifact） | https://claude.ai/artifact/DqR5bVgq24rCGWqpfm8GVx （非公開。見るには共有設定が必要） |
 | iOS | Capacitor 7 → [`ios-app/`](ios-app/)。Bundle ID `work.ltv.anten`。GitHub Actions「iOS build check」で署名なしビルドが成功（最新 2026-10-26、v1.2・共有プラグイン込み。macos-26・Xcode 26。Simulator Debug / 実機 Release）。手順は [ios-app/岩崎さんへの引き渡し手順.md](ios-app/岩崎さんへの引き渡し手順.md) |
 | 本体 | `index.html`（約85KB。画像・音源ファイルなし。外部ライブラリなし） |
-| 自動テスト | `node tools/test.mjs`（37件。生成の公平性・1ラウンドの流れ・保存・鏡の列・日替わりとゴースト・設定・今週の集計・ベストに挑む・称号の画像） |
+| 自動テスト | `node tools/test.mjs`（40件。生成の公平性・1ラウンドの流れ・保存・鏡の列・日替わりとゴースト・設定・今週の集計・ベストに挑む・称号の画像） |
 | 通信 | なし（完全オフライン。外部フォントも使わない） |
 | データ | 端末内のみ（localStorage のキー `anten.v1`。iOS 版も同じ） |
 | 対応 | スマホ縦持ち（iPhone Safari / Android Chrome）。PC はマウスかキーボード（Space + ←→） |
@@ -47,6 +47,7 @@
 - 音はすべて WebAudio で合成（まぶた・通過・暗闇のハム音・忍び列の擦れる音・ヒヤリ・死亡）。設定で ON/OFF
 - 振動（対応端末のみ）、感度の切り替え（低 / 標準 / 高）、高コントラスト（残像を白に）、ゆっくり（まぶたの動きを1.5倍遅く）、一時停止、データの消去
 - 日替わりの結果に「今週 n日目 ｜ 週ベスト」と 常連（3日）/ 精勤（5日）/ 皆勤（7日）の印。共有文にも入る
+- **記録**（v1.2）: タイトルの「記録」で、端末内の上位10回と累計（回数・列・暗列・最長連続暗）
 - 画面の回転・アプリ復帰・保存できない環境でも止まらない
 - iOS 版のみ: 本物の触覚フィードバック、毎朝8時の「今日の暗転」のお知らせ（設定で ON/OFF）、閉眼中はステータスバーも暗く、称号の画像は共有シート（写真への保存も）
 
@@ -62,6 +63,7 @@ App Store への申請手順は **[ios-app/岩崎さんへの引き渡し手順.
   index.html              アプリ本体（HTML・CSS・JavaScript を1ファイルに）
   support.html            サポート・プライバシーポリシー（App Store のサポート URL）
   about.html              紹介ページ（営業・ポートフォリオ用。動画・絵コンテ・段位の紋章）
+  about-en.html           紹介ページの英語版
   manifest.json / sw.js   PWA 用（ホーム画面に追加、通信なしで起動）
   icon.svg                アイコンの元データ（半分閉じた目）
   icon-192.png / icon-512.png / icon-512-maskable.png / apple-touch-icon.png
@@ -101,10 +103,18 @@ App Store への申請手順は **[ios-app/岩崎さんへの引き渡し手順.
 - 称号の画像を共有: `docs/20261026_NEW_0009_APP_称号の画像を共有.md`
 - 段位の紋章と週のバッジ: `docs/20261026_ENH_0010_APP_段位の紋章と週のバッジを画像に.md`
 - 紹介ページ: `docs/20261026_DOC_0011_ALL_紹介ページ（営業・ポートフォリオ用）.md`
+- 記録（上位10回と累計）: `docs/20261027_NEW_0012_APP_記録（端末内の上位10回と累計）.md`
+- 紹介ページの英語版: `docs/20261027_DOC_0013_ALL_紹介ページの英語版.md`
 - 機能追加・バグ修正・改善をしたら、1件ごとに文書を足して `bash docs/manager/generate_docs_json.sh` を実行する
+
+## 設計の線引き（これ以上複雑にしない）
+
+- **難易度設定は付けない。** 難易度は列の速さ・隙間の幅・忍び列などで自動的に上がる。「今日の暗転」と段位は全員同じ土俵だから比べられる。やさしくしたい人には「ゆっくり」と「感度」がある
+- 遊びの規則（列の種類・得点・モード）は v1.2 で完成。以後は不具合修正と、遊び方を変えないもの（記録・資料・翻訳）だけ足す
+- 設定は6つまで（音・振動・感度・高コントラスト・ゆっくり・朝のお知らせ）。これ以上は増やさない
 
 ## 残作業
 
 - 実機（iPhone / Android）での確認: 最初のタッチで音が鳴るか、閉眼が真っ暗になるか、iOS 版の通知と触覚
 - App Store 申請（岩崎さん）: 署名・アップロード（スクリーンショットと文面は用意済み）
-- 拡張案: ランキング（端末内の上位10回の記録）、紹介ページの英語版
+- 拡張案: なし（上の線引きのとおり、遊びの規則はここで完成）

@@ -117,8 +117,20 @@ body.dark #score.gold,body.dark #best.gold{color:var(--gold)}
 /* ---------- sheet (settings) ---------- */
 #scrim{position:fixed;inset:0;background:rgba(21,22,26,.3);opacity:0;pointer-events:none;transition:opacity .3s var(--ease);z-index:6}
 #scrim.open{opacity:1;pointer-events:auto}
-#settings{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;max-height:min(86vh,86dvh);display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--paper2);border-bottom:0;border-radius:24px 24px 0 0;transform:translateY(105%);visibility:hidden;transition:transform .4s var(--ease),visibility 0s .4s;z-index:7;pointer-events:auto}
-#settings.open{transform:none;visibility:visible;transition:transform .4s var(--ease)}
+#settings,#records{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;max-height:min(86vh,86dvh);display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--paper2);border-bottom:0;border-radius:24px 24px 0 0;transform:translateY(105%);visibility:hidden;transition:transform .4s var(--ease),visibility 0s .4s;z-index:7;pointer-events:auto}
+#settings.open,#records.open{transform:none;visibility:visible;transition:transform .4s var(--ease)}
+.rec{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--paper2);font-size:14px}
+.rec:last-child{border-bottom:0}
+.rec .n{font-weight:800;color:var(--ink3);font-variant-numeric:tabular-nums}
+.rec .s{font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.rec .s small{font-weight:600;font-size:12px;color:var(--ink3);margin-left:6px}
+.rec .d{font-size:11px;color:var(--ink3);text-align:right;line-height:1.5;font-variant-numeric:tabular-nums}
+.rec.top .s{color:var(--gold)}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 0 4px}
+.sum div{text-align:center}
+.sum b{display:block;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.sum span{font-size:11px;color:var(--ink3)}
+.empty{padding:22px 0;text-align:center;color:var(--ink3);font-size:13px}
 .grip{width:36px;height:4px;border-radius:4px;background:var(--paper2);margin:10px auto 0}
 .shead{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 4px 22px}
 .shead h2{margin:0;font-size:18px;font-weight:800;letter-spacing:.14em}
@@ -169,6 +181,7 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-rec" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a1 1 0 0 0-1 1A3.5 3.5 0 0 0 8 10.5M16 6h2.5a1 1 0 0 1 1 1 3.5 3.5 0 0 1-3.5 3.5"/><path d="M12 13v3M9 19.5h6M10 16h4v3.5h-4z"/></symbol>
     <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9.5h18M8 2.5v3M16 2.5v3"/><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none"/></symbol>
     <symbol id="i-spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
     <symbol id="i-spkoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></symbol>
@@ -205,6 +218,7 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
       <div class="row">
         <button class="icon-btn" id="tSettings" aria-label="設定"><svg><use href="#i-gear"/></svg><span class="lbl">設定</span></button>
         <button class="icon-btn" id="tDaily" aria-label="今日の暗転"><svg><use href="#i-cal"/></svg><span class="lbl">今日の暗転</span></button>
+        <button class="icon-btn" id="tRecords" aria-label="記録"><svg><use href="#i-rec"/></svg><span class="lbl">記録</span></button>
         <button class="icon-btn" id="tSound" aria-label="音"><svg id="tSoundIcon"><use href="#i-spk"/></svg><span class="lbl">音</span></button>
       </div>
       <div class="stats" id="tStats">ベスト 0 ｜ 累計 0列</div>
@@ -246,6 +260,14 @@ body.dark .toast{background:var(--paper);color:var(--ink)}
     </div>
   </div>
 
+  <div id="records" role="dialog" aria-label="記録">
+    <div class="grip"></div>
+    <div class="shead"><h2>記録</h2><button class="icon-btn" id="recClose" aria-label="閉じる"><svg><use href="#i-x"/></svg></button></div>
+    <div class="sbody">
+      <div class="sum"><div><b id="sumPlays">0</b><span>回</span></div><div><b id="sumRows">0</b><span>累計の列</span></div><div><b id="sumDark">0</b><span>暗列</span></div><div><b id="sumStreak">0</b><span>最長連続暗</span></div></div>
+      <div id="recList"></div>
+    </div>
+  </div>
   <div id="toasts"></div>
   <div id="shareSheet" role="dialog" aria-label="称号を共有">
     <div class="grip"></div>
@@ -285,7 +307,7 @@ const VERSION = '1.2';
 // ================= 保存 =================
 const KEY = 'anten.v1';
 const DEF = () => ({
-  v: 1, best: 0, bestRows: 0, bestDate: '', bestDark: 0, bestSeed: 0, bestGhost: null, maxDarkStreak: 0,
+  v: 1, best: 0, bestRows: 0, bestDate: '', bestDark: 0, bestSeed: 0, bestGhost: null, maxDarkStreak: 0, records: [],
   totalRows: 0, totalDarkRows: 0, totalPlays: 0, tier: 0,
   daily: { date: '', tries: 0, best: 0, bestRows: 0, bestDark: 0, ghost: null, ghostScore: 0 },
   dailyHistory: [],
@@ -315,6 +337,8 @@ function load() {
     if (!Array.isArray(d.daily.ghost) || d.daily.ghost.length > 8000 || d.daily.ghost.some(v => typeof v !== 'number')) d.daily.ghost = null;
     if (!Array.isArray(d.bestGhost) || d.bestGhost.length > 8000 || d.bestGhost.some(v => typeof v !== 'number')) d.bestGhost = null;
     d.bestSeed = Math.floor(Number(d.bestSeed) || 0) >>> 0; d.bestDark = Math.max(0, Math.floor(Number(d.bestDark) || 0));
+    if (!Array.isArray(d.records)) d.records = [];
+    d.records = d.records.filter(r => r && typeof r === 'object' && Number.isFinite(r.s)).slice(0, 10);
     return d;
   } catch (e) { return DEF(); }
 }
@@ -851,6 +875,9 @@ function showResult() {
   if (isBest) { S.best = G.score; S.bestRows = G.passed; S.bestDark = G.darkRows; S.bestDate = localDateStr(); S.bestSeed = G.seed; S.bestGhost = G.trace.slice(); }
   if (G.maxStreak > S.maxDarkStreak) S.maxDarkStreak = G.maxStreak;
   S.totalRows += G.passed; S.totalDarkRows += G.darkRows;
+  // 端末内の上位10回（得点順。同点は新しい方を上に）
+  S.records.push({ s: G.score, r: G.passed, d: G.darkRows, k: G.maxStreak, date: localDateStr(), m: mode === 'daily' ? 'd' : mode === 'best' ? 'b' : 'e' });
+  S.records.sort((a, b) => b.s - a.s || (b.date > a.date ? 1 : b.date < a.date ? -1 : 0)); S.records = S.records.slice(0, 10);
   S.tier = tierOf(S.totalRows);
   if (mode === 'daily') {
     if (G.score > S.daily.best || !S.daily.ghost) { S.daily.ghost = G.trace.slice(); S.daily.ghostScore = G.score; }
@@ -1385,7 +1412,7 @@ function simulate({ seed = 1, n = 300, kind = 'A', log: keepLog = false } = {}) 
 }
 // 検証用: 画面が止まっていても内部時間を sec 秒ぶん進める（60fps 相当）
 function advance(sec) { let now = lastT || 0; for (let i = 0, n = Math.round(sec * 60); i < n; i++) { now += 1 / 60; tick(now); } return fxTime; }
-window.__anten = { simulate, advance, weekSummary, makeShareImage, shareInfo, drawEmblem, rankIndex, RANKS, get mode() { return mode; }, set mode(m) { mode = m; }, get view() { return { W, LH, SC, OX, OY, PY, FY }; }, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
+window.__anten = { simulate, advance, weekSummary, makeShareImage, shareInfo, drawEmblem, rankIndex, RANKS, openRecords, get mode() { return mode; }, set mode(m) { mode = m; }, get view() { return { W, LH, SC, OX, OY, PY, FY }; }, get state() { return state; }, get G() { return G; }, get rows() { return rows; }, get eye() { return eye; }, get S() { return S; }, get player() { return player; }, get fxTime() { return fxTime; }, speedAt, spacingAt, gapAt, dmaxAt, toggleBot() { bot = !bot; return bot; } };
 
 // ================= 画面のつなぎ =================
 function refreshTitle() {
@@ -1404,11 +1431,29 @@ function refreshSettings() {
   $('sReset').textContent = '消す'; ui.resetArmed = -9;
 }
 function openSettings() { sfx.btn(); refreshSettings(); ui.settingsOpen = true; $('settings').classList.add('open'); $('scrim').classList.add('open'); if (state === ST.PLAY) pause(); }
+function openRecords() {
+  sfx.btn();
+  $('sumPlays').textContent = S.totalPlays; $('sumRows').textContent = S.totalRows.toLocaleString(); $('sumDark').textContent = S.totalDarkRows.toLocaleString(); $('sumStreak').textContent = S.maxDarkStreak;
+  const list = $('recList'); list.textContent = '';
+  if (!S.records.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'まだ記録がない。1回遊ぶとここに残る'; list.appendChild(e); }
+  S.records.forEach((r, i) => {
+    const row = document.createElement('div'); row.className = 'rec' + (i === 0 ? ' top' : '');
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = i + 1;
+    const sc = document.createElement('span'); sc.className = 's'; sc.textContent = r.s; const sm = document.createElement('small'); sm.textContent = `${r.r}列 ・ 暗${r.d}` + (r.k ? ` ・ 連続${r.k}` : ''); sc.appendChild(sm);
+    const d = document.createElement('span'); d.className = 'd'; d.textContent = `${(r.date || '').replace(/-/g, '/')}\n${r.m === 'd' ? '今日の暗転' : r.m === 'b' ? 'ベストに挑戦' : 'エンドレス'}`; d.style.whiteSpace = 'pre-line';
+    row.append(n, sc, d); list.appendChild(row);
+  });
+  ui.settingsOpen = true; $('records').classList.add('open'); $('scrim').classList.add('open');
+}
+function closeRecords() { $('records').classList.remove('open'); $('scrim').classList.remove('open'); ui.settingsOpen = false; }
 function closeSettings() { ui.settingsOpen = false; $('settings').classList.remove('open'); $('scrim').classList.remove('open'); refreshTitle(); persist(); }
 $('tSettings').addEventListener('click', openSettings);
 $('rSettings').addEventListener('click', openSettings);
 $('sClose').addEventListener('click', () => { sfx.btn(); closeSettings(); });
-$('scrim').addEventListener('click', () => { if ($('shareSheet').classList.contains('open')) closeShareSheet(); else closeSettings(); });
+$('scrim').addEventListener('click', () => { if ($('shareSheet').classList.contains('open')) closeShareSheet(); else if ($('records').classList.contains('open')) closeRecords(); else closeSettings(); });
+$('tRecords').addEventListener('click', openRecords);
+$('recClose').addEventListener('click', () => { sfx.btn(); closeRecords(); });
+$('records').addEventListener('pointerdown', e => e.stopPropagation());
 $('settings').addEventListener('pointerdown', e => e.stopPropagation());
 $('tSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); persist(); refreshTitle(); sfx.btn(); });
 $('swSound').addEventListener('click', () => { audioInit(); S.settings.sound = !S.settings.sound; setMaster(); refreshSettings(); sfx.btn(); });
@@ -1448,7 +1493,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('keydown', e => {
   if (e.repeat) return;
-  if (ui.settingsOpen) { if (e.key === 'Escape') { if ($('shareSheet').classList.contains('open')) closeShareSheet(); else closeSettings(); } return; }
+  if (ui.settingsOpen) { if (e.key === 'Escape') { if ($('shareSheet').classList.contains('open')) closeShareSheet(); else if ($('records').classList.contains('open')) closeRecords(); else closeSettings(); } return; }
   if (e.key === ' ' || e.code === 'Space') {
     e.preventDefault();
     if (pointer.id !== null || key.held) return;

@@ -1,15 +1,35 @@
 {
-  "next_no": 12,
-  "total": 11,
-  "generated_at": "2026-10-26T23:53:38.111801",
+  "next_no": 14,
+  "total": 13,
+  "generated_at": "2026-10-27T13:48:29.698515",
   "documents": [
+    {
+      "no": 13,
+      "date": "2026-10-27",
+      "type": "DOC",
+      "category": "ALL",
+      "title": "紹介ページの英語版",
+      "filename": "20261027_DOC_0013_ALL_紹介ページの英語版.md",
+      "extension": "md",
+      "summary": "海外向けポートフォリオ用に、紹介ページの英語版 `about-en.html` を作った（https://kiyotake1229.github.io/anten/about-en.html ）。構造・CSS・画像は日本語版と同じで、文言だけ英語。段位名は Novice / Groping / Night Eye / In the Dark / Mind's Eye / Nothing とした。日"
+    },
+    {
+      "no": 12,
+      "date": "2026-10-27",
+      "type": "NEW",
+      "category": "APP",
+      "title": "記録（端末内の上位10回と累計）",
+      "filename": "20261027_NEW_0012_APP_記録（端末内の上位10回と累計）.md",
+      "extension": "md",
+      "summary": "タイトルの「記録」から、端末内の上位10回（得点・列数・暗列・連続・日付・モード）と累計（回数・列・暗列・最長連続暗）を見られるシートを足した。遊びの規則は変えていない。難易度設定は付けない方針（理由は README「設計の線引き」）。"
+    },
     {
       "no": 11,
       "date": "2026-10-26",
       "type": "DOC",
       "category": "ALL",
-      "title": "紹介ページ（営業・ポートフォリオ用）",
-      "filename": "20261026_DOC_0011_ALL_紹介ページ（営業・ポートフォリオ用）.md",
+      "title": "紹介ページ（営業・ポートフォリオ用）",
+      "filename": "20261026_DOC_0011_ALL_紹介ページ（営業・ポートフォリオ用）.md",
       "extension": "md",
       "summary": "営業・ポートフォリオ・SNS で使い回せる1ページ `about.html` を作り、GitHub Pages で公開した（https://kiyotake1229.github.io/anten/about.html ）。最初の10秒の動画と絵コンテ、3つの決まり、スクリーンショット5枚、6つの段位の紋章、つくり（技術）、制作の進め方をまとめた。OGP を設定してあるので、URL を貼ると絵コン"
     },
@@ -18,8 +38,8 @@
       "date": "2026-10-26",
       "type": "ENH",
       "category": "APP",
-      "title": "段位の紋章と週のバッジを画像に",
-      "filename": "20261026_ENH_0010_APP_段位の紋章と週のバッジを画像に.md",
+      "title": "段位の紋章と週のバッジを画像に",
+      "filename": "20261026_ENH_0010_APP_段位の紋章と週のバッジを画像に.md",
       "extension": "md",
       "summary": "6つの段位にそれぞれ紋章（絵柄）を付け、称号の共有画像とリザルトの「段位」の横に出すようにした。日替わりの共有画像には、週のバッジ（常連・精勤・皆勤）があるとき金色の帯と月桂の弧を描く。文字だけだった称号に見た目の差がつき、SNS で見分けがつく。"
     },
