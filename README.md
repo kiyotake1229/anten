@@ -11,7 +11,7 @@
 | サポート・プライバシーポリシー | https://kiyotake1229.github.io/anten/support.html （App Store のサポート URL。ポリシーは `#privacy`） |
 | 紹介ページ（営業・ポートフォリオ用） | https://kiyotake1229.github.io/anten/about.html （動画・絵コンテ・スクリーンショット・段位の紋章・つくり）／ 英語版 https://kiyotake1229.github.io/anten/about-en.html |
 | 開発確認用（Claude Artifact） | https://claude.ai/artifact/DqR5bVgq24rCGWqpfm8GVx （非公開。見るには共有設定が必要） |
-| iOS | Capacitor 7 → [`ios-app/`](ios-app/)。Bundle ID `work.ltv.anten`。GitHub Actions「iOS build check」で署名なしビルドが成功（最新 2026-10-26、v1.2・共有プラグイン込み。macos-26・Xcode 26。Simulator Debug / 実機 Release）。手順は [ios-app/岩崎さんへの引き渡し手順.md](ios-app/岩崎さんへの引き渡し手順.md) |
+| iOS | Capacitor 7 → [`ios-app/`](ios-app/)。Bundle ID `work.ltv.anten`。GitHub Actions「iOS build check」で署名なしビルドが成功（最新 2026-10-27、v1.2・共有プラグイン込み。macos-26・Xcode 26。Simulator Debug / 実機 Release）。手順は [ios-app/岩崎さんへの引き渡し手順.md](ios-app/岩崎さんへの引き渡し手順.md) |
 | 本体 | `index.html`（約85KB。画像・音源ファイルなし。外部ライブラリなし） |
 | 自動テスト | `node tools/test.mjs`（40件。生成の公平性・1ラウンドの流れ・保存・鏡の列・日替わりとゴースト・設定・今週の集計・ベストに挑む・称号の画像） |
 | 通信 | なし（完全オフライン。外部フォントも使わない） |
